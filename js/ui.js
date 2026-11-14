@@ -1,12 +1,15 @@
 // DOM wiring: sliders, panels, plot updates and URL hash. All physics lives in
 // the pure modules; this file only connects them to the page.
-import { totalModel, chi2 } from './physics.js';
+import {
+  totalModel, chi2, luminosity, wienPeakUm, beltTempRange, excessRatio,
+} from './physics.js';
 import {
   RANGES, defaultState, decodeHash, encodeHash, normalizeState, setBeltDistance,
   toPhysicsParams, toSimple, hasAdvancedPhysics, countFreeParams,
 } from './model.js';
 import { buildFigure, resolveColors } from './figure.js';
 import { parseCsv, modelToCsv } from './dataio.js';
+import { equations } from './equations.js';
 
 // Live state shared with the feature modules wired in below.
 let state = location.hash.length > 1 ? decodeHash(location.hash) : defaultState();
@@ -272,6 +275,79 @@ function syncControls() {
   }
 }
 
+// ---- readouts and equations --------------------------------------------------
+
+const readoutsEl = document.getElementById('readouts');
+const eqHost = document.getElementById('equations-host');
+eqHost.innerHTML = '<details class="panel" id="equations"><summary>Equations (live)</summary><div id="eq-list"></div></details>';
+const eqDetails = document.getElementById('equations');
+const eqList = document.getElementById('eq-list');
+eqDetails.addEventListener('toggle', () => { if (eqDetails.open) renderEquations(); });
+
+const g3 = (v) => (v !== 0 && (Math.abs(v) >= 1e4 || Math.abs(v) < 1e-2) ? v.toExponential(2) : v.toPrecision(3));
+
+function renderReadouts(model) {
+  const L = luminosity(state.star.T, state.star.R);
+  const rows = [
+    ['Luminosity', `${g3(L)} L☉`],
+    ['Wien peak (2898/T)', `${g3(wienPeakUm(state.star.T))} µm`],
+  ];
+  const beltRows = [['Belt 1', state.belt1], ['Belt 2', state.belt2]];
+  for (const [name, b] of beltRows) {
+    if (!b.on) continue;
+    const [lo, hi] = beltTempRange(L, b);
+    rows.push([`${name} dust temperature`, b.rIn === b.rOut ? `${g3(hi)} K` : `${g3(lo)}–${g3(hi)} K`]);
+    rows.push([`${name} L_dust/L★`, g3(b.f)]);
+  }
+  if (state.belt1.on || state.belt2.on) {
+    for (const lam of [24, 70]) {
+      rows.push([`Excess at ${lam} µm (total/star)`, g3(excessRatio(model.grid, model.total, model.star, lam))]);
+    }
+  }
+  let html = '<dl class="readout-grid">' + rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('') + '</dl>';
+  html += '<p class="hint">The peak you see on the plot depends on the flux unit: F_λ peaks at 2898/T µm, λF_λ near 3670/T, F_ν near 5100/T.</p>';
+  if (fitStats) {
+    const n = uploadedPoints.length;
+    const k = countFreeParams(state);
+    const assumed = fitStats.assumedErrCount ? ` (assuming 10% errors on ${fitStats.assumedErrCount} point${fitStats.assumedErrCount === 1 ? '' : 's'})` : '';
+    html += fitStats.reduced === null
+      ? `<p>χ² = ${g3(fitStats.chi2)}: add more points than free parameters (${n} points, ${k} free) for a reduced χ².${assumed}</p>`
+      : `<p>χ²<sub>red</sub> = ${g3(fitStats.reduced)} (${n} points, ${k} free parameters)${assumed}</p>`;
+  }
+  readoutsEl.innerHTML = html;
+}
+
+function renderEquations() {
+  if (!eqDetails.open) return;
+  eqList.innerHTML = '';
+  for (const eq of equations(state)) {
+    const div = document.createElement('div');
+    div.className = 'eq';
+    div.dataset.controls = eq.controls.join(' ');
+    if (window.katex) {
+      window.katex.render(eq.tex, div, { throwOnError: false, displayMode: false });
+    } else {
+      div.textContent = eq.tex;
+    }
+    eqList.appendChild(div);
+  }
+}
+
+function highlight(controlIds, on) {
+  for (const id of controlIds) {
+    const host = document.querySelector(`[data-ctl="${id}"]`);
+    if (host) host.classList.toggle('hl', on);
+  }
+}
+eqList.addEventListener('mouseover', (e) => {
+  const eq = e.target.closest('.eq');
+  if (eq) highlight(eq.dataset.controls.split(' '), true);
+});
+eqList.addEventListener('mouseout', (e) => {
+  const eq = e.target.closest('.eq');
+  if (eq) highlight(eq.dataset.controls.split(' '), false);
+});
+
 // ---- rendering --------------------------------------------------------------
 
 const cssColor = (name) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
@@ -294,6 +370,8 @@ function render() {
   const shownPoints = state.mode === 'advanced' && uploadedPoints.length ? uploadedPoints : null;
   fitStats = shownPoints ? chi2(shownPoints, model.grid, model.total, countFreeParams(state)) : null;
   const fig = buildFigure(model, state, { points: shownPoints });
+  renderReadouts(model);
+  renderEquations();
   const resolved = resolveColors(fig, cssColor);
   Plotly.react(plotEl, resolved.data, resolved.layout, { responsive: true, displaylogo: false });
   try {

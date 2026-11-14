@@ -97,3 +97,11 @@ button[aria-pressed="true"] { background: var(--accent); color: var(--bg); borde
 .errors:empty { display: none; }
 .panel select, .panel input[type="file"] { max-width: 100%; margin: 4px 0 8px; }
 [hidden] { display: none !important; }
+
+.readout-grid { display: grid; grid-template-columns: max-content 1fr; gap: 2px 16px; margin: 0; }
+.readout-grid dt { color: var(--muted); }
+.readout-grid dd { margin: 0; font-variant-numeric: tabular-nums; }
+.eq { padding: 6px 2px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.eq:last-child { border-bottom: 0; }
+.ctl.hl { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+details.panel > summary { cursor: pointer; font-weight: 600; }

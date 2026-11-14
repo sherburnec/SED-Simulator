@@ -398,7 +398,7 @@ Readouts panel: L★ (L☉), Wien λ_peak = 2898/T (µm) with the note "The peak
 
 Equations panel: collapsible, rendered with `katex.render`, re-rendered in `render()` only when open. Hovering an equation adds a highlight class to its controls.
 
-- [ ] **Step 1: Write failing tests**:
+- [x] **Step 1: Write failing tests**:
 
 ```js
 test('dust temperature equation substitutes current values', () => {
@@ -409,9 +409,9 @@ test('emissivity equation only in advanced', () => {});
 test('each equation lists the sliders that change it', () => {});
 ```
 
-- [ ] **Step 2: Run** → FAIL. **Step 3: Implement** `equations.js`, then the panels. **Step 4: Run** `npm test` → PASS.
-- [ ] **Step 5: Verify in browser:** readouts update while dragging; the equations panel renders and highlights controls on hover.
-- [ ] **Step 6: Commit** `feat: live readouts and equations panel`.
+- [x] **Step 2: Run** → FAIL. **Step 3: Implement** `equations.js`, then the panels. **Step 4: Run** `npm test` → PASS.
+- [ ] **Step 5 (NOT RUN: needs the user): Verify in browser:** readouts update while dragging; the equations panel renders and highlights controls on hover.
+- [x] **Step 6: Commit** `feat: live readouts and equations panel`.
 
 ---
 
