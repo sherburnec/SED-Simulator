@@ -264,7 +264,7 @@ test('modelToCsv has header and 500 rows', () => {});
 `belt1.on` is a small addition beyond the spec's control table. The Sun preset ("no disk") and Challenge 1 ("bare star") both need a star with no dust, so simple mode gets a "Show dust belt" checkbox above the two dust sliders.
   - `decodeHash(hash: string) → State` — ignores unknown keys, falls back per key on unparseable values, then `normalizeState`; sets `mode:'advanced'` if `hasAdvancedPhysics` or `unit ≠ 'lamFlam'` or `bands`
 
-- [ ] **Step 1: Write failing tests**:
+- [x] **Step 1: Write failing tests**:
 
 ```js
 test('hash round-trips a full advanced state to 4 sig figs', () => {});
@@ -280,8 +280,8 @@ test('toSimple resets advanced physics and display, reports via hasAdvancedPhysi
 test('countFreeParams: simple 5; dust off 3; extended belt1 with beta 8; plus extended belt2 with beta 13', () => {});
 ```
 
-- [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat: app state, simple-mode reset and share links`.
+- [x] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat: app state, simple-mode reset and share links`.
 
 ---
 
