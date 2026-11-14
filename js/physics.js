@@ -12,7 +12,13 @@ export const CONST = {
   AU: 1.495978707e13,     // cm
   pc: 3.0856775814914e18, // cm
   um: 1e-4,               // cm per micrometre
+  Mearth: 5.972e27,       // g
 };
+
+// Single grain size for the mass <-> brightness conversion.
+export const GRAIN = { aUm: 10, rho: 2.5 }; // radius (um), density (g cm^-3)
+export const F_MAX = 0.1;        // optically thin model is meaningless beyond this
+export const AV_PER_KPC = 1.0;   // rough Galactic-plane average, mag per kpc
 
 // Log-spaced wavelength grid in micrometres, endpoints inclusive.
 export function makeGrid(minUm = 0.05, maxUm = 3000, n = 500) {
@@ -177,14 +183,93 @@ export function beltTempRange(L, { rIn, rOut }) {
   return [dustTemp(L, rOut), dustTemp(L, rIn)];
 }
 
-// params = { star: {T,R,d}, belts: [belt, ...] } -> model on the standard grid.
-export function totalModel({ star, belts }) {
+// ---------------------------------------------------------------------------
+// Interstellar extinction and dust mass
+// ---------------------------------------------------------------------------
+
+const RV = 3.1;
+
+// Cardelli, Clayton & Mathis 1989 (ApJ 345, 245): A_lambda/A_V = a(x) + b(x)/R_V,
+// x = 1/lambda in 1/um, valid 0.3 <= x <= 10.
+function ccm(x) {
+  let a;
+  let b;
+  if (x < 1.1) {
+    const p = x ** 1.61;
+    a = 0.574 * p;
+    b = -0.527 * p;
+  } else if (x < 3.3) {
+    const y = x - 1.82;
+    a = 1 + y * (0.17699 + y * (-0.50447 + y * (-0.02427 + y * (0.72085 + y * (0.01979 + y * (-0.77530 + y * 0.32999))))));
+    b = y * (1.41338 + y * (2.28305 + y * (1.07233 + y * (-5.38434 + y * (-0.62251 + y * (5.30260 + y * -2.09002))))));
+  } else if (x < 8) {
+    let fa = 0;
+    let fb = 0;
+    if (x >= 5.9) {
+      const u = x - 5.9;
+      fa = -0.04473 * u * u - 0.009779 * u ** 3;
+      fb = 0.2130 * u * u + 0.1207 * u ** 3;
+    }
+    a = 1.752 - 0.316 * x - 0.104 / ((x - 4.67) ** 2 + 0.341) + fa;
+    b = -3.090 + 1.825 * x + 1.206 / ((x - 4.62) ** 2 + 0.263) + fb;
+  } else {
+    const u = x - 8;
+    a = -1.073 - 0.628 * u + 0.137 * u * u - 0.070 * u ** 3;
+    b = 13.670 + 4.257 * u - 0.420 * u * u + 0.374 * u ** 3;
+  }
+  return a + b / RV;
+}
+
+// A_lambda / A_V (R_V = 3.1):
+//   0.1-2.159 um: CCM89. Below 0.1 um: held at the 0.1 um value.
+//   2.159-8 um: Indebetouw et al. 2005 (ApJ 619, 931),
+//     log(A/A_Ks) = 0.61 - 2.22 log(lam) + 1.21 log(lam)^2, times A_Ks/A_V.
+//   8-24 um: held at the 8 um value (the 9.7 um silicate feature is omitted).
+//   > 24 um: the 24 um value times (24/lam)^2.
+export function extinctionRatio(lamUm) {
+  const KS = 2.159;
+  if (lamUm <= KS) return ccm(1 / Math.max(lamUm, 0.1));
+  const indebetouw = (l) => {
+    const lg = Math.log10(l);
+    return ccm(1 / KS) * 10 ** (0.61 - 2.22 * lg + 1.21 * lg * lg);
+  };
+  if (lamUm <= 8) return indebetouw(lamUm);
+  if (lamUm <= 24) return indebetouw(8);
+  return indebetouw(8) * (24 / lamUm) ** 2;
+}
+
+// Typical Galactic-plane reddening: A_V grows linearly with distance.
+export function avForDistance(dPc) {
+  return (AV_PER_KPC * dPc) / 1000;
+}
+
+// Optically thin belt of single-size grains (radius a, density rho, mass M):
+// total cross-section = 3M/(4 rho a); a belt at r intercepts sigma/(4 pi r^2) of
+// the starlight, which for Sigma ~ 1/r integrates to 1/(r_in r_out):
+//   f = 3 M / (16 pi rho a r_in r_out)   (M in Earth masses, radii in AU)
+const fracFactor = () => (3 * CONST.Mearth) / (16 * Math.PI * GRAIN.rho * GRAIN.aUm * CONST.um * CONST.AU * CONST.AU);
+
+export function fracFromMass(Mearth, rInAu, rOutAu) {
+  return (fracFactor() * Mearth) / (rInAu * rOutAu);
+}
+
+export function massForFrac(f, rInAu, rOutAu) {
+  return (f * rInAu * rOutAu) / fracFactor();
+}
+
+// params = { star: {T,R,d}, belts: [belt, ...], Av }. star, belts and total are
+// as observed (reddened by Av); starIntrinsic is the unreddened star.
+export function totalModel({ star, belts, Av = 0 }) {
   const grid = makeGrid();
-  const starF = starFlux(grid, star);
-  const beltF = belts.map((b) => beltFlux(grid, star, b));
+  const starIntrinsic = starFlux(grid, star);
+  const att = new Float64Array(grid.length);
+  for (let i = 0; i < grid.length; i++) att[i] = Av > 0 ? 10 ** (-0.4 * Av * extinctionRatio(grid[i])) : 1;
+  const redden = (arr) => arr.map((v, i) => v * att[i]);
+  const starF = redden(starIntrinsic);
+  const beltF = belts.map((b) => redden(beltFlux(grid, star, b)));
   const total = Float64Array.from(starF);
   for (const bf of beltF) for (let i = 0; i < total.length; i++) total[i] += bf[i];
-  return { grid, star: starF, belts: beltF, total };
+  return { grid, star: starF, starIntrinsic, belts: beltF, total };
 }
 
 // Log-log interpolated total/star at lamUm.

@@ -74,7 +74,7 @@
   - `massForFrac(f, rInAu, rOutAu) → number`: the exact inverse
   - `totalModel({ star, belts, Av = 0 }) → { grid, star, starIntrinsic, belts, total }`: `star`, `belts` and `total` are the *observed* (reddened) values, and `starIntrinsic` is unreddened. The `belts[i].f` that callers pass is already capped (see Task 3).
 
-- [ ] **Step 1: Write the failing tests** in `tests/physics.ism.test.js`:
+- [x] **Step 1: Write the failing tests** in `tests/physics.ism.test.js`:
   - `'CCM89 anchors'`: `extinctionRatio(0.5495)` is within 0.01 of 1.000. Within 2%: 0.4400 → 1.324, 1.235 → 0.2876, 2.159 → 0.1170.
   - `'Indebetouw IRAC plateau'`: within 2%: 3.550 → 0.0665, 7.872 → 0.0458. Also `extinctionRatio(4.493) / extinctionRatio(5.731)` lies between 1.05 and 1.25.
   - `'continuous at 2.159 µm and 8 µm'`: the values at λ·(1 ± 1e-6) agree within 2%.
@@ -84,13 +84,13 @@
   - `'A_V = 10 at the grid edge stays finite'`: `totalModel({ star:{T:40000,R:20,d:1}, belts:[], Av:10 })` has every array finite and ≥ 0, and `star[0] < starIntrinsic[0]`.
   - `'extinction cancels in the excess ratio'`: for a Sun with a 40 AU belt at f=1e-4, `excessRatio` at 23.68 µm is the same within 1e-9 relative for Av = 0 and Av = 5.
   - `'Av = 0 leaves the model unchanged'`: `star` equals `starIntrinsic` element by element.
-- [ ] **Step 2: Add to `tests/physics.dust.test.js`:**
+- [x] **Step 2: Add to `tests/physics.dust.test.js`:**
   - `'mass to f'`: `fracFromMass(1, 1, 1)` is within 0.5% of 637.1. `fracFromMass(2.5e-4, 40, 40)` is within 1% of 9.95e-5. `massForFrac(fracFromMass(3e-5, 8, 90), 8, 90)` is within 1e-12 relative of 3e-5.
   - `'extended belt f uses r_in r_out'`: `fracFromMass(M, 10, 100) === fracFromMass(M, Math.sqrt(1000), Math.sqrt(1000))` (relative 1e-12).
-- [ ] **Step 3: Run** `npm test`. Expected: the new tests FAIL (the functions are not exported).
-- [ ] **Step 4: Implement** these in `js/physics.js`, with a comment above each giving its equation and citation. `extinctionRatio` contains the full CCM89 `a(x)`, `b(x)` piecewise polynomials (IR 0.3–1.1, optical 1.1–3.3, UV 3.3–8 with the F_a/F_b terms above x = 5.9, far-UV 8–10), the Indebetouw branch and the two holds/power law. In `totalModel`, multiply star and belts by `10 ** (-0.4 * Av * extinctionRatio(λ))` once per grid point (precompute the factor array), then sum the total from the reddened parts.
-- [ ] **Step 5: Run** `npm test`. Expected: all physics tests PASS, and the existing star/dust/χ² tests are unchanged and green.
-- [ ] **Step 6: Commit** `feat: ISM extinction law and dust mass conversion`.
+- [x] **Step 3: Run** `npm test`. Expected: the new tests FAIL (the functions are not exported).
+- [x] **Step 4: Implement** these in `js/physics.js`, with a comment above each giving its equation and citation. `extinctionRatio` contains the full CCM89 `a(x)`, `b(x)` piecewise polynomials (IR 0.3–1.1, optical 1.1–3.3, UV 3.3–8 with the F_a/F_b terms above x = 5.9, far-UV 8–10), the Indebetouw branch and the two holds/power law. In `totalModel`, multiply star and belts by `10 ** (-0.4 * Av * extinctionRatio(λ))` once per grid point (precompute the factor array), then sum the total from the reddened parts.
+- [x] **Step 5: Run** `npm test`. Expected: all physics tests PASS, and the existing star/dust/χ² tests are unchanged and green.
+- [x] **Step 6: Commit** `feat: ISM extinction law and dust mass conversion`.
 
 ### Task 3: State: mass, extinction, hold-brightness, share links
 

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   CONST, makeGrid, starFlux, luminosity, dustTemp, beltNorm, beltFlux,
   beltTempRange, totalModel, excessRatio, beltRings, peakIndex,
+  fracFromMass, massForFrac,
 } from '../js/physics.js';
 
 function integrate(g, f) {
@@ -117,4 +118,15 @@ test('extended belt shares follow area/(4 pi r^2): share ~ (1/a - 1/b)', () => {
   // Inner third of annuli carries ~59.5% of the luminosity
   const inner = rings.slice(0, 10).reduce((s, x) => s + x.share, 0);
   assert.ok(Math.abs(inner - 0.595) < 0.005, `inner third ${inner}`);
+});
+
+test('mass to f', () => {
+  assert.ok(Math.abs(fracFromMass(1, 1, 1) / 637.1 - 1) < 0.005);
+  assert.ok(Math.abs(fracFromMass(2.5e-4, 40, 40) / 9.95e-5 - 1) < 0.01);
+  assert.ok(Math.abs(massForFrac(fracFromMass(3e-5, 8, 90), 8, 90) / 3e-5 - 1) < 1e-12);
+});
+
+test('extended belt f uses r_in r_out', () => {
+  const g = Math.sqrt(1000);
+  assert.ok(Math.abs(fracFromMass(1e-3, 10, 100) / fracFromMass(1e-3, g, g) - 1) < 1e-12);
 });
