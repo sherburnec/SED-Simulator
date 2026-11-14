@@ -112,3 +112,10 @@ test('non-finite numbers fall back to defaults', () => {
   const s = normalizeState({ star: { T: NaN, R: Infinity, d: 'x' } });
   assert.deepEqual(s.star, defaultState().star);
 });
+
+test('lambda0 alone does not count as advanced physics when beta is 0', () => {
+  const s = defaultState();
+  s.belt1.lambda0 = 100.4;
+  assert.equal(hasAdvancedPhysics(s), false);
+  assert.equal(decodeHash('l1=120').mode, 'simple');
+});

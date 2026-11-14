@@ -123,3 +123,40 @@ test('resolveColors replaces every var: token and leaves other strings alone', (
   assert.ok(text.includes('#star') && text.includes('#band'));
   assert.equal(fig.data[0].name, 'Star');
 });
+
+test('band shapes use data values and annotations use log10 (Plotly log-axis rules)', () => {
+  const { state, model } = setup((s) => { s.bands = true; });
+  const { layout } = buildFigure(model, state);
+  const iJ = BANDS.findIndex((b) => b.id === '2MASS J');
+  assert.ok(Math.abs(layout.shapes[iJ].x0 - 1.25 * 0.95) < 1e-12);
+  assert.ok(Math.abs(layout.shapes[iJ].x1 - 1.25 * 1.05) < 1e-12);
+  assert.ok(Math.abs(layout.annotations[iJ].x - Math.log10(1.25)) < 1e-12);
+});
+
+test('y range expands to include data far above the model, with error bars', () => {
+  const { state, model } = setup();
+  const base = buildFigure(model, state).layout.yaxis.range;
+  const hi = 10 ** (base[1] + 1.5);
+  const fig = buildFigure(model, state, { points: [{ lamUm: 24, fLam: hi / (24e-4), errFlam: null }] });
+  assert.ok(fig.layout.yaxis.range[1] > Math.log10(hi * 1.1));
+});
+
+test('y range expands to include a brighter reveal curve', () => {
+  const { state, model } = setup();
+  const bright = totalModel({ star: { T: 5772, R: 5, d: 10 }, belts: [] });
+  const fig = buildFigure(model, state, { revealModel: bright });
+  const topReveal = Math.log10(Math.max(...convertArray(bright.grid, bright.total, state.unit)));
+  assert.ok(fig.layout.yaxis.range[1] >= topReveal);
+});
+
+test('zero flux error is drawn as the same 10% that chi2 assumes', () => {
+  const { state, model } = setup();
+  const fig = buildFigure(model, state, { points: [{ lamUm: 24, fLam: 1e-3, errFlam: 0 }] });
+  const t = fig.data.find((x) => x.name === 'Data');
+  assert.ok(Math.abs(t.error_y.array[0] / convertFlux(24, 1e-4, state.unit) - 1) < 1e-12);
+});
+
+test('hover shows all components at one wavelength', () => {
+  const { state, model } = setup();
+  assert.equal(buildFigure(model, state).layout.hovermode, 'x unified');
+});

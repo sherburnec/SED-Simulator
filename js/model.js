@@ -71,10 +71,11 @@ export function setBeltDistance(state, r) {
   return normalizeState({ ...state, belt1: { ...state.belt1, rIn: r, rOut: r } });
 }
 
-// True if belt shape, emissivity or belt 2 differ from what simple mode can express.
+// True if belt shape, emissivity or belt 2 differ from what simple mode can
+// express. lambda0 only matters when beta is not 0, so it is not checked alone.
 export function hasAdvancedPhysics(state) {
   const b = state.belt1;
-  return b.rIn !== b.rOut || b.beta !== 0 || b.lambda0 !== 100 || state.belt2.on;
+  return b.rIn !== b.rOut || b.beta !== 0 || state.belt2.on;
 }
 
 // Back to simple mode: advanced physics and display settings reset.

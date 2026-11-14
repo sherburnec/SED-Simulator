@@ -61,7 +61,7 @@ export function buildFigure(model, state, { points = null, revealModel = null } 
       marker: { color: 'var:data', size: 8 },
       error_y: {
         type: 'data', visible: true, color: 'var:data',
-        array: points.map((p) => convertFlux(p.lamUm, p.errFlam ?? ASSUMED_ERR_FRAC * p.fLam, unit)),
+        array: points.map((p) => convertFlux(p.lamUm, p.errFlam > 0 ? p.errFlam : ASSUMED_ERR_FRAC * p.fLam, unit)),
       },
     });
   }
@@ -75,27 +75,44 @@ export function buildFigure(model, state, { points = null, revealModel = null } 
   }
 
   const top = Math.log10(Math.max(...totalY.filter((v) => Number.isFinite(v) && v > 0)));
+  // y range: 6 decades below the model peak, half a decade above, widened to
+  // include any data points (with error bars) and the revealed curve.
+  let yHi = top + 0.5;
+  let yLo = top - 6;
+  for (const t of data) {
+    if (t.name === 'Data') {
+      t.y.forEach((y, i) => {
+        if (!(y > 0)) return;
+        yHi = Math.max(yHi, Math.log10(y + t.error_y.array[i]) + 0.1);
+        yLo = Math.min(yLo, Math.log10(y) - 0.5);
+      });
+    } else if (t.name === 'True model') {
+      const m = Math.max(...t.y.filter((v) => Number.isFinite(v) && v > 0));
+      yHi = Math.max(yHi, Math.log10(m) + 0.5);
+    }
+  }
   const layout = {
     xaxis: { type: 'log', title: { text: 'Wavelength (µm)' }, color: 'var:fg', gridcolor: 'var:grid' },
     yaxis: {
-      type: 'log', title: { text: Y_TITLES[unit] }, range: [top - 6, top + 0.5],
+      type: 'log', title: { text: Y_TITLES[unit] }, range: [yLo, yHi],
       color: 'var:fg', gridcolor: 'var:grid',
     },
     paper_bgcolor: 'var:bg',
     plot_bgcolor: 'var:bg',
     font: { color: 'var:fg' },
     legend: { orientation: 'h', y: -0.2 },
+    hovermode: 'x unified',
     margin: { l: 70, r: 20, t: 20, b: 60 },
     shapes: [],
     annotations: [],
   };
 
   if (state.bands) {
-    // On log axes Plotly takes shape and annotation x positions as log10(value).
+    // Plotly log axes: shape x0/x1 are data values, annotation x is log10(value).
     for (const b of BANDS) {
       layout.shapes.push({
         type: 'rect', xref: 'x', yref: 'paper',
-        x0: Math.log10(b.lamUm * 0.95), x1: Math.log10(b.lamUm * 1.05), y0: 0, y1: 1,
+        x0: b.lamUm * 0.95, x1: b.lamUm * 1.05, y0: 0, y1: 1,
         fillcolor: 'var:band', line: { width: 0 }, layer: 'below',
       });
       layout.annotations.push({

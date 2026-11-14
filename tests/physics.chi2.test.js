@@ -59,3 +59,10 @@ test('points outside the grid are ignored', () => {
   const r = chi2([pointAt(24, 0.1), { lamUm: 5000, fLam: 1, errFlam: 1 }], MODEL.grid, MODEL.total, 0);
   assert.equal(r.dof, 1);
 });
+
+test('interpLogLog is exact for a power law between grid points', () => {
+  const g = Float64Array.from([1, 10, 100]);
+  const v = Float64Array.from([1, 100, 10000]); // v = lam^2
+  assert.ok(Math.abs(interpLogLog(g, v, 3) / 9 - 1) < 1e-12);
+  assert.ok(Math.abs(interpLogLog(g, v, 40) / 1600 - 1) < 1e-12);
+});
