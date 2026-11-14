@@ -71,9 +71,9 @@
   - `convertArray(gridUm, arr, unit) → Float64Array`
   - `peakIndex(arr) → number` — index of the maximum
 
-- [ ] **Step 1: Create `package.json`** with the content in the file map.
+- [x] **Step 1: Create `package.json`** with the content in the file map.
 
-- [ ] **Step 2: Write failing tests** in `tests/physics.star.test.js`:
+- [x] **Step 2: Write failing tests** in `tests/physics.star.test.js`:
 
 ```js
 test('Sun luminosity is 1 Lsun within 0.5%', () => {
@@ -116,10 +116,10 @@ test('Planck stays finite and non-negative at extremes', () => {
 
 Fill in the integral test body with `luminosity(5772,1)*CONST.Lsun/(4*Math.PI*(10*CONST.pc)**2)` as the expected value.
 
-- [ ] **Step 3: Run** `npm test` → FAIL (module not found).
-- [ ] **Step 4: Implement** the exports listed above in `js/physics.js`. Put a comment above each function giving the equation it implements, matching the spec's "Physics model" section.
-- [ ] **Step 5: Run** `npm test` → all PASS.
-- [ ] **Step 6: Commit** `feat: physics core for stellar SED and flux units`.
+- [x] **Step 3: Run** `npm test` → FAIL (module not found).
+- [x] **Step 4: Implement** the exports listed above in `js/physics.js`. Put a comment above each function giving the equation it implements, matching the spec's "Physics model" section.
+- [x] **Step 5: Run** `npm test` → all PASS.
+- [x] **Step 6: Commit** `feat: physics core for stellar SED and flux units`.
 
 ---
 
