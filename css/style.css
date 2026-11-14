@@ -109,3 +109,10 @@ details.panel > summary { cursor: pointer; font-weight: 600; }
 .inline { display: inline-flex; align-items: center; gap: 6px; }
 .preset-desc { margin: 8px 16px 0; max-width: 1100px; }
 .preset-desc:empty { display: none; }
+
+.panel-title { font-size: 1rem; margin: 0 0 8px; }
+button.block { display: block; width: 100%; text-align: left; margin: 0 0 6px; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+table.reveal { border-collapse: collapse; width: 100%; font-size: 0.9em; }
+table.reveal th, table.reveal td { border-bottom: 1px solid var(--border); padding: 3px 6px; text-align: left; }
+button:disabled, select:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }

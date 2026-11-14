@@ -11,6 +11,9 @@ import { buildFigure, resolveColors } from './figure.js';
 import { parseCsv, modelToCsv } from './dataio.js';
 import { equations } from './equations.js';
 import { PRESETS, applyPreset } from './presets.js';
+import {
+  CHALLENGES, mulberry32, syntheticPhotometry, startState, freeControlIds, compareValues,
+} from './challenges.js';
 
 // Live state shared with the feature modules wired in below.
 let state = location.hash.length > 1 ? decodeHash(location.hash) : defaultState();
@@ -19,6 +22,8 @@ let uploadedText = '';      // raw text of the last upload, re-parsed if the fil
 let activeChallenge = null; // challenge in progress (Task 10)
 let fitStats = null;        // chi2 of the shown data against the model, or null
 let lastModel = null;
+let fitN = 0;               // number of data points behind fitStats
+let fitK = 0;               // free parameters behind fitStats
 
 const plotEl = document.getElementById('plot');
 const SLIDER_STEPS = 1000;
@@ -207,7 +212,7 @@ presetEl.addEventListener('change', () => {
 });
 
 function setMode(mode) {
-  if (mode === state.mode) return;
+  if (activeChallenge || mode === state.mode) return;
   if (mode === 'simple') {
     if (hasAdvancedPhysics(state)
       && !window.confirm('Switching to Simple mode resets belt shape, emissivity and belt 2. Continue?')) {
@@ -271,6 +276,92 @@ document.getElementById('download-csv').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+// ---- challenges --------------------------------------------------------------
+
+const MYSTERY_REROLL = new Set(['bare-star', 'find-dust', 'star-and-dust']);
+
+topnav.insertAdjacentHTML('beforeend', '<button type="button" id="btn-challenges" aria-pressed="false">Challenges</button>');
+document.querySelector('.controls').insertAdjacentHTML('afterbegin', `
+  <section class="panel" id="challenge-panel" hidden>
+    <h2 class="panel-title">Challenges</h2>
+    <div id="challenge-list">
+      ${CHALLENGES.map((c) => `<button type="button" class="block" data-challenge="${c.id}">${c.title}</button>`).join('')}
+    </div>
+    <div id="challenge-active" hidden>
+      <h3 id="ch-title"></h3>
+      <p id="ch-prompt"></p>
+      <p id="ch-chi" role="status"></p>
+      <div class="btn-row">
+        <button type="button" id="ch-reveal-btn">Reveal</button>
+        <button type="button" id="ch-new">New mystery</button>
+        <button type="button" id="ch-exit">Exit</button>
+      </div>
+      <div id="ch-reveal"></div>
+    </div>
+  </section>`);
+const challengePanel = document.getElementById('challenge-panel');
+const challengeBtn = document.getElementById('btn-challenges');
+challengeBtn.addEventListener('click', () => {
+  challengePanel.hidden = !challengePanel.hidden;
+  challengeBtn.setAttribute('aria-pressed', String(!challengePanel.hidden));
+});
+
+function startChallenge(ch) {
+  const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+  const rng = mulberry32(seed);
+  const hidden = ch.makeHidden(rng);
+  const points = syntheticPhotometry(hidden, rng);
+  const previous = activeChallenge ? activeChallenge.previous : { state, preset: presetEl.value };
+  activeChallenge = { challenge: ch, hidden, points, revealed: false, previous };
+  state = startState(ch, hidden);
+  document.getElementById('ch-reveal').innerHTML = '';
+  scheduleRender(true);
+}
+
+function exitChallenge() {
+  if (!activeChallenge) return;
+  state = activeChallenge.previous.state;
+  presetEl.value = activeChallenge.previous.preset;
+  activeChallenge = null;
+  scheduleRender(true);
+}
+
+challengePanel.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-challenge]');
+  if (btn) startChallenge(CHALLENGES.find((c) => c.id === btn.dataset.challenge));
+});
+document.getElementById('ch-reveal-btn').addEventListener('click', () => {
+  if (activeChallenge) { activeChallenge.revealed = true; scheduleRender(); }
+});
+document.getElementById('ch-new').addEventListener('click', () => {
+  if (activeChallenge) startChallenge(activeChallenge.challenge);
+});
+document.getElementById('ch-exit').addEventListener('click', exitChallenge);
+
+const fmtVal = (v) => (v !== 0 && (Math.abs(v) >= 1e4 || Math.abs(v) < 1e-2) ? v.toExponential(2) : String(Number(v.toPrecision(4))));
+
+function renderChallengePanel() {
+  const active = !!activeChallenge;
+  document.getElementById('challenge-list').hidden = active;
+  document.getElementById('challenge-active').hidden = !active;
+  if (!active) return;
+  const { challenge, hidden, revealed } = activeChallenge;
+  document.getElementById('ch-title').textContent = challenge.title;
+  document.getElementById('ch-prompt').textContent = challenge.prompt;
+  document.getElementById('ch-new').hidden = !MYSTERY_REROLL.has(challenge.id);
+  document.getElementById('ch-chi').textContent = fitStats
+    ? (fitStats.reduced === null
+      ? `χ² = ${fmtVal(fitStats.chi2)}`
+      : `Reduced χ² = ${fmtVal(fitStats.reduced)} (aim for about 1)`)
+    : '';
+  const revealEl = document.getElementById('ch-reveal');
+  if (!revealed) { revealEl.innerHTML = ''; return; }
+  const rows = compareValues(challenge, hidden, state);
+  revealEl.innerHTML = '<table class="reveal"><tr><th>Parameter</th><th>True</th><th>Yours</th></tr>'
+    + rows.map((r) => `<tr><td>${r.label}</td><td>${fmtVal(r.truth)}</td><td>${fmtVal(r.student)}</td></tr>`).join('')
+    + '</table>';
+}
+
 // ---- syncing controls to state -------------------------------------------------
 
 const setDisabled = (host, disabled) => {
@@ -298,6 +389,18 @@ function syncControls() {
   }
   for (const c of BELT2_CONTROLS) {
     setDisabled(document.querySelector(`[data-ctl="${c.id}"]`), !state.belt2.on);
+  }
+
+  // During a challenge only the sliders being solved for stay enabled.
+  const allowed = activeChallenge ? freeControlIds(activeChallenge.challenge) : null;
+  for (const host of document.querySelectorAll('[data-ctl]')) {
+    if (allowed && !allowed.has(host.dataset.ctl)) setDisabled(host, true);
+    else if (!allowed && ['T', 'R', 'd'].includes(host.dataset.ctl)) setDisabled(host, false);
+  }
+  const locked = !!activeChallenge;
+  for (const el of [beltOnEl, belt2OnEl, presetEl, fileInput, document.getElementById('clear-data'),
+    document.getElementById('mode-simple'), document.getElementById('mode-advanced')]) {
+    el.disabled = locked;
   }
 }
 
@@ -333,8 +436,8 @@ function renderReadouts(model) {
   let html = '<dl class="readout-grid">' + rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('') + '</dl>';
   html += '<p class="hint">The peak you see on the plot depends on the flux unit: F_λ peaks at 2898/T µm, λF_λ near 3670/T, F_ν near 5100/T.</p>';
   if (fitStats) {
-    const n = uploadedPoints.length;
-    const k = countFreeParams(state);
+    const n = fitN;
+    const k = fitK;
     const assumed = fitStats.assumedErrCount ? ` (assuming 10% errors on ${fitStats.assumedErrCount} point${fitStats.assumedErrCount === 1 ? '' : 's'})` : '';
     html += fitStats.reduced === null
       ? `<p>χ² = ${g3(fitStats.chi2)}: add more points than free parameters (${n} points, ${k} free) for a reduced χ².${assumed}</p>`
@@ -393,15 +496,25 @@ function scheduleRender(resync = false) {
 function render() {
   const model = totalModel(toPhysicsParams(state));
   lastModel = model;
-  const shownPoints = state.mode === 'advanced' && uploadedPoints.length ? uploadedPoints : null;
-  fitStats = shownPoints ? chi2(shownPoints, model.grid, model.total, countFreeParams(state)) : null;
-  const fig = buildFigure(model, state, { points: shownPoints });
+  let shownPoints = state.mode === 'advanced' && uploadedPoints.length ? uploadedPoints : null;
+  let nFree = countFreeParams(state);
+  let revealModel = null;
+  if (activeChallenge) {
+    shownPoints = activeChallenge.points;
+    nFree = activeChallenge.challenge.free.length;
+    if (activeChallenge.revealed) revealModel = totalModel(toPhysicsParams(activeChallenge.hidden));
+  }
+  fitN = shownPoints ? shownPoints.length : 0;
+  fitK = nFree;
+  fitStats = shownPoints ? chi2(shownPoints, model.grid, model.total, nFree) : null;
+  const fig = buildFigure(model, state, { points: shownPoints, revealModel });
+  renderChallengePanel();
   renderReadouts(model);
   renderEquations();
   const resolved = resolveColors(fig, cssColor);
   Plotly.react(plotEl, resolved.data, resolved.layout, { responsive: true, displaylogo: false });
   try {
-    history.replaceState(null, '', `#${encodeHash(state)}`);
+    if (!activeChallenge) history.replaceState(null, '', `#${encodeHash(state)}`);
   } catch {
     // some embedders disallow replaceState; the link just isn't updated
   }

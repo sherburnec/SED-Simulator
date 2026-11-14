@@ -458,7 +458,7 @@ test('all preset states survive normalizeState unchanged (inside slider ranges)'
 
 UI: Challenges button opens a panel listing the five. Starting one sets `activeChallenge = { challenge, hidden, points }`, applies `startState`, disables sliders not in `free`, plots `points` (no model curve for hidden), and shows live χ² with `nFree = challenge.free.length`. Challenge 1's hidden state has `belt1.on: false`. "Reveal" passes `revealModel` to `buildFigure` and shows a table of true and student values. "New mystery" re-rolls (1–3 only). "Exit" restores the previous state. Challenge state is never written to the URL hash.
 
-- [ ] **Step 1: Write failing tests**:
+- [x] **Step 1: Write failing tests**:
 
 ```js
 test('seeded rng is deterministic', () => {});
@@ -468,9 +468,9 @@ test('startState copies non-free params from hidden and leaves free params at de
 test('challenges 4 and 5 are identical across seeds', () => {});
 ```
 
-- [ ] **Step 2: Run** → FAIL. **Step 3: Implement** module, then UI. **Step 4: Run** `npm test` → PASS.
-- [ ] **Step 5: Verify in browser:** complete challenge 1 by hand; reveal shows the true curve; the hash does not change during a challenge; exit restores the prior view.
-- [ ] **Step 6: Commit** `feat: mystery SED challenges`.
+- [x] **Step 2: Run** → FAIL. **Step 3: Implement** module, then UI. **Step 4: Run** `npm test` → PASS.
+- [ ] **Step 5 (NOT RUN: needs the user): Verify in browser:** complete challenge 1 by hand; reveal shows the true curve; the hash does not change during a challenge; exit restores the prior view.
+- [x] **Step 6: Commit** `feat: mystery SED challenges`.
 
 ---
 
