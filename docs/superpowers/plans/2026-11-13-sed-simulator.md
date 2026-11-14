@@ -479,8 +479,8 @@ test('challenges 4 and 5 are identical across seeds', () => {});
 **Files:**
 - Create: `README.md`, `.nojekyll`
 
-- [ ] **Step 1: Write README:** what the simulator teaches (one paragraph), how to run locally (`python -m http.server` or `npx http-server`), how to run tests (`npm test`, Node 22+), where the physics lives (`js/physics.js`, equations commented), how to enable GitHub Pages (Settings → Pages → Deploy from branch → `main` / root), and how share links work.
-- [ ] **Step 2: Add `.nojekyll`** so Pages serves the files as-is.
-- [ ] **Step 3: Run** `npm test` → all PASS. Paste the summary line into the task report.
-- [ ] **Step 4: Full manual pass** in Chrome and Firefox, light and dark, at desktop and 375 px width: every spec section (controls, plot, readouts, equations, presets, challenges, upload, export, share link) works; the console is clean.
-- [ ] **Step 5: Commit** `docs: README and Pages config`.
+- [x] **Step 1: Write README:** what the simulator teaches (one paragraph), how to run locally (`python -m http.server` or `npx http-server`), how to run tests (`npm test`, Node 22+), where the physics lives (`js/physics.js`, equations commented), how to enable GitHub Pages (Settings → Pages → Deploy from branch → `main` / root), and how share links work.
+- [x] **Step 2: Add `.nojekyll`** so Pages serves the files as-is.
+- [x] **Step 3: Run** `npm test` → all PASS. Paste the summary line into the task report.
+- [ ] **Step 4 (NOT RUN: needs the user): Full manual pass** in Chrome and Firefox, light and dark, at desktop and 375 px width: every spec section (controls, plot, readouts, equations, presets, challenges, upload, export, share link) works; the console is clean.
+- [x] **Step 5: Commit** `docs: README and Pages config`.
