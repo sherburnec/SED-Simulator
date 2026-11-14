@@ -132,7 +132,7 @@ export function buildFigure(model, state, { points = null, revealModel = null } 
       layout.annotations.push({
         x: Math.log10(b.lamUm), xref: 'x', y: 1 - 0.06 * gi, yref: 'paper', text: b.label,
         showarrow: false, yanchor: 'top', xanchor: 'center',
-        font: { size: 9, color: token },
+        font: { size: 9, color: `var:bandtext-${b.group.toLowerCase()}` },
       });
     }
   }

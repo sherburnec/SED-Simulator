@@ -16,6 +16,10 @@
   --band-allwise: rgba(200, 120, 20, 0.16);
   --band-irac: rgba(30, 150, 80, 0.16);
   --band-mips: rgba(180, 40, 140, 0.14);
+  --bandtext-2mass: #2456c8;
+  --bandtext-allwise: #b05f00;
+  --bandtext-irac: #1b7f4a;
+  --bandtext-mips: #a02a80;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -37,6 +41,10 @@
     --band-allwise: rgba(255, 180, 90, 0.20);
     --band-irac: rgba(110, 220, 150, 0.20);
     --band-mips: rgba(240, 130, 210, 0.20);
+    --bandtext-2mass: #7fa6ff;
+    --bandtext-allwise: #ffb35a;
+    --bandtext-irac: #6edc96;
+    --bandtext-mips: #f082d2;
   }
 }
 

@@ -8,7 +8,7 @@ export const RANGES = {
   d: [1, 3000, 'log'],
   r: [0.1, 1000, 'log'],
   Av: [0, 10, 'lin'],
-  M: [1e-8, 100, 'log'], // Earth masses
+  M: [1e-12, 100, 'log'], // Earth masses
   lambda0: [10, 1000, 'log'],
   beta: [0, 2, 'lin'],
 };
@@ -202,9 +202,11 @@ export function decodeHash(hash) {
     };
   };
   const drop = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
+  // A v1 link has f keys and no extinction keys: open it unreddened, as v1 drew it.
+  const legacy = (raw.f1 !== undefined || raw.f2 !== undefined) && raw.al === undefined && raw.av === undefined;
   const state = normalizeState({
     star: drop({ T: n('T'), R: n('R'), d: n('d') }),
-    ism: drop({ Av: n('av'), linked: flag('al') }),
+    ism: legacy ? { Av: 0, linked: false } : drop({ Av: n('av'), linked: flag('al') }),
     belt1: drop(belt(1)),
     belt2: drop(belt(2)),
     holdBrightness: flag('hb'),

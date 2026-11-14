@@ -77,7 +77,7 @@ and Spitzer MIPS** bands, and for Herschel, JCMT and ALMA to be removed.
 ### 3. Disk mass replaces f as the brightness control
 
 - The simple-mode "How bright the dust is" slider (f) becomes **"How much
-  dust", M_dust (Earth masses)**, range 10⁻⁸–100 M⊕, log, default 2.5×10⁻⁴ M⊕.
+  dust", M_dust (Earth masses)**, range 10⁻¹²–100 M⊕, log, default 2.5×10⁻⁴ M⊕.
   At the default 40 AU around the Sun this reproduces v1's default f ≈ 10⁻⁴.
   Belt 2's controls change the same way (default 8×10⁻⁷ M⊕).
 - Physics (optically thin, single grain size): grains of radius a and density
@@ -113,7 +113,7 @@ and Spitzer MIPS** bands, and for Herschel, JCMT and ALMA to be removed.
 | Interstellar dimming A_V | 0 – 10 mag | linear | linked: 0.01 mag |
 | ↳ Set from distance | checkbox | | on |
 | Belt distance r | 0.1 – 1000 AU | log | 40 AU |
-| Dust mass M_dust | 10⁻⁸ – 100 M⊕ | log | 2.5×10⁻⁴ M⊕ |
+| Dust mass M_dust | 10⁻¹² – 100 M⊕ | log | 2.5×10⁻⁴ M⊕ |
 | ↳ Keep brightness fixed when moving | checkbox | | off |
 | Show telescope bands | checkbox | | on |
 

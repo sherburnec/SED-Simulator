@@ -33,7 +33,7 @@ test('defaults match the spec', () => {
   assert.deepEqual(RANGES.T, [2500, 40000, 'log']);
   assert.deepEqual(RANGES.d, [1, 3000, 'log']);
   assert.deepEqual(RANGES.Av, [0, 10, 'lin']);
-  assert.deepEqual(RANGES.M, [1e-8, 100, 'log']);
+  assert.deepEqual(RANGES.M, [1e-12, 100, 'log']);
 });
 
 test('hash round-trips a full advanced state to 4 sig figs', () => {
@@ -197,4 +197,19 @@ test('hash round-trips the new fields', () => {
 test('free params count A_V only when unlinked', () => {
   assert.equal(countFreeParams(defaultState()), 5);
   assert.equal(countFreeParams(setLinked(defaultState(), false)), 6);
+});
+
+test('legacy link with a faint hot belt keeps its f (mass floor is low enough)', () => {
+  const s = decodeHash('f1=1e-6&r1i=0.1&r1o=0.1');
+  assert.ok(Math.abs(beltFrac(s.belt1) / 1e-6 - 1) < 1e-3, `${beltFrac(s.belt1)}`);
+  const t = decodeHash('f1=1e-5&r1i=0.5&r1o=0.5');
+  assert.ok(Math.abs(beltFrac(t.belt1) / 1e-5 - 1) < 1e-3);
+});
+
+test('a v1 link (f keys, no al/av) opens unreddened, not linked to distance', () => {
+  const s = decodeHash('d=400&f1=2e-5&r1i=80&r1o=80');
+  assert.equal(s.ism.linked, false);
+  assert.equal(s.ism.Av, 0);
+  assert.equal(decodeHash('d=400&m1=1e-3').ism.linked, true);
+  assert.equal(decodeHash('d=400&f1=2e-5&al=1').ism.linked, true);
 });

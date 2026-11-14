@@ -203,3 +203,11 @@ test('hover shows all components at one wavelength', () => {
   const { state, model } = setup();
   assert.equal(buildFigure(model, state).layout.hovermode, 'x unified');
 });
+
+test('band labels use opaque text tokens, not the translucent strip colours', () => {
+  const { state, model } = setup();
+  const { layout } = buildFigure(model, state);
+  BANDS.forEach((b, i) => {
+    assert.equal(layout.annotations[i].font.color, `var:bandtext-${b.group.toLowerCase()}`);
+  });
+});
