@@ -112,7 +112,7 @@
   - `countFreeParams` follows spec §6. `toSimple` keeps `ism`, `holdBrightness` and `bands`, and resets only the unit and the advanced physics.
   - Hash keys `av`, `al`, `hb`, `m1`, `m2` (dropping `f1`/`f2` on encode), and `bd` defaulting to on. Decoding migrates legacy `f1`/`f2` with `massForFrac` at the decoded radii, and an `m` key wins over an `f` key. `wantsAdvanced` no longer looks at `bands`.
 
-- [ ] **Step 1: Write the failing tests:**
+- [x] **Step 1: Write the failing tests:**
   - `'default state matches spec §4'`: deep-equal to the object above. `beltFrac(defaultState().belt1)` is within 1% of 1e-4.
   - `'linked Av follows distance'`: setting d=2000 through `normalizeState` gives Av 2. With `linked:false, Av:4`, Av stays 4 at any d.
   - `'unlinking keeps Av'`: `setLinked({…linked state at d=1500}, false).ism.Av === 1.5`.
@@ -124,10 +124,10 @@
   - `'hash round-trips the new fields'`: av, al, hb, m1, m2 survive encode → decode, and so does d = 2500.
   - `'free params count A_V only when unlinked'`: default → 5; unlinked → 6.
   - Update the old fixtures (`f:` → `M:`) and the old `decodeHash('f1=5')` clamp test (it now asserts a capped `beltFrac` of 0.1).
-- [ ] **Step 2: Run** `npm test`. Expected: the new model tests FAIL.
-- [ ] **Step 3: Implement** the Interfaces above in `js/model.js`.
-- [ ] **Step 4: Run** `npm test`. Expected: the model tests PASS. Tests in other modules that still read `belt.f` may fail. Fix any test that only needs `f` → `M`, and leave presets/challenges/equations failures for Tasks 4–5 marked `test.todo('Task 4/5')`.
-- [ ] **Step 5: Commit** `feat: state for dust mass, extinction and hold-brightness, with link migration`.
+- [x] **Step 2: Run** `npm test`. Expected: the new model tests FAIL.
+- [x] **Step 3: Implement** the Interfaces above in `js/model.js`.
+- [x] **Step 4: Run** `npm test`. Expected: the model tests PASS. Tests in other modules that still read `belt.f` may fail. Fix any test that only needs `f` → `M`, and leave presets/challenges/equations failures for Tasks 4–5 marked `test.todo('Task 4/5')`.
+- [x] **Step 5: Commit** `feat: state for dust mass, extinction and hold-brightness, with link migration`.
 
 ### Task 4: Figure and equations
 
