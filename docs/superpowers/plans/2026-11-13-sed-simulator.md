@@ -146,7 +146,7 @@ Fill in the integral test body with `luminosity(5772,1)*CONST.Lsun/(4*Math.PI*(1
 norm(T, λ0, β) = ∫ Q(λ) B_λ(T) dλ over NORM_GRID (0.01–1e6 µm, 4000 log pts, trapezoid in cm)
 ring at r:  F_λ = [f_share · L★·Lsun / (4π d²)] · Q(λ) B_λ(T_d(r)) / norm(T_d(r), λ0, β)
 extended:   30 annuli, edges log-spaced from rIn to rOut; annulus i at its geometric-mean radius;
-            f_share_i = f · (edge[i+1] − edge[i]) / (rOut − rIn)        // Σ ∝ r⁻¹ ⇒ area ∝ dr
+            f_share_i = f · (1/a − 1/b) / (1/rIn − 1/rOut)   // a<b annulus edges; Σ ∝ r⁻¹ ⇒ area ∝ dr, absorbed fraction ∝ dr/r²
 ring case:  rIn === rOut → single ring, f_share = f
 ```
 

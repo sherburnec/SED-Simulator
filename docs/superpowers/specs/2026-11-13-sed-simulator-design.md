@@ -106,12 +106,14 @@ Each belt is a ring of grains at radius `r` (simple mode) or spread over
   the plot range so normalisation is not truncated).
 - Extended belt (Advanced): split `r_in`–`r_out` into 30 annuli, log-spaced.
   Cross-sectional area per unit radius is constant (surface density
-  Σ ∝ r⁻¹), so each annulus gets a share of `f` proportional to its
-  width. Each annulus has its own `T_d(r)`. *(Builder-facing call made by
-  the designer: a fixed profile keeps the control count down. A slider for
-  the power-law index is a possible later addition.)*
-
-Total: `F_λ = F_λ,★ + Σ belts F_λ,dust`.
+  Σ ∝ r⁻¹). `f` is the fraction of starlight absorbed and re-emitted, and an
+  annulus at radius `r` intercepts area/(4πr²) of it, so each annulus gets a
+  share of `f` proportional to dr/r², i.e. `(1/a − 1/b)` for edges `a < b`
+  (inner annuli carry most of the luminosity). Each annulus has its own
+  `T_d(r)`. *(Corrected during Task 2 review: an earlier draft weighted by
+  width dr, which implies Σ ∝ r and puts the emission too far out. A fixed
+  profile keeps the control count down; a slider for the power-law index is a
+  possible later addition.)*
 
 **Teaching note shown in the UI:** blackbody grains are cooler than real
 small grains, so the radius implied by a fitted dust temperature is usually

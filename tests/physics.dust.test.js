@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   CONST, makeGrid, starFlux, luminosity, dustTemp, beltNorm, beltFlux,
-  beltTempRange, totalModel, excessRatio,
+  beltTempRange, totalModel, excessRatio, beltRings, peakIndex,
 } from '../js/physics.js';
 
 function integrate(g, f) {
@@ -93,4 +93,28 @@ test('two extended belts compute in under 20 ms', () => {
   for (let i = 0; i < 10; i++) totalModel(p);
   const avg = (performance.now() - t0) / 10;
   assert.ok(avg < 20, `avg ${avg} ms`);
+});
+
+test('ring spectrum peaks at 2898/T_d (F_lambda, beta=0)', () => {
+  const g = makeGrid();
+  const belt = { rIn: 80, rOut: 80, f: 2e-5, lambda0: 100, beta: 0 };
+  const Td = dustTemp(luminosity(STAR.T, STAR.R), 80);
+  const ratio = g[peakIndex(beltFlux(g, STAR, belt))] / (2898 / Td);
+  assert.ok(ratio > 0.97 && ratio < 1.03, `ratio ${ratio}`);
+});
+
+test('extended belt shares follow area/(4 pi r^2): share ~ (1/a - 1/b)', () => {
+  const rings = beltRings({ rIn: 10, rOut: 100 });
+  assert.equal(rings.length, 30);
+  assert.ok(Math.abs(rings.reduce((s, x) => s + x.share, 0) - 1) < 1e-12);
+  const step = Math.log(100 / 10) / 30;
+  const edge = (i) => 10 * Math.exp(step * i);
+  const norm = 1 / 10 - 1 / 100;
+  rings.forEach((x, i) => {
+    const expected = (1 / edge(i) - 1 / edge(i + 1)) / norm;
+    assert.ok(Math.abs(x.share / expected - 1) < 1e-9);
+  });
+  // Inner third of annuli carries ~59.5% of the luminosity
+  const inner = rings.slice(0, 10).reduce((s, x) => s + x.share, 0);
+  assert.ok(Math.abs(inner - 0.595) < 0.005, `inner third ${inner}`);
 });

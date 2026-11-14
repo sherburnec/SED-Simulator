@@ -111,7 +111,7 @@ export function emissivity(lamUm, lambda0Um, beta) {
 
 // Wide log grid (um) used only to normalise belt spectra, so the integral is
 // not truncated by the plotted range. Built once at load.
-const NORM_GRID = makeGrid(0.01, 1e6, 2000);
+const NORM_GRID = makeGrid(0.01, 1e6, 500);
 
 // norm(T, lambda0, beta) = integral of Q(lambda) B_lambda(T) d(lambda), cgs.
 export function beltNorm(T, lambda0, beta) {
@@ -133,17 +133,20 @@ const N_ANNULI = 30;
 // Split a belt into rings: [{ r, share }] where share is the fraction of the
 // belt's fractional luminosity f carried by that ring. A belt with
 // rIn === rOut is one ring. An extended belt has 30 log-spaced annuli with
-// surface density proportional to 1/r, so cross-sectional area per annulus
-// is proportional to its width dr and share = width / (rOut - rIn).
-function beltRings({ rIn, rOut }) {
+// surface density proportional to 1/r, so the cross-sectional area of an
+// annulus is proportional to its width dr. f is the fraction of starlight
+// absorbed and re-emitted, and an annulus at r intercepts area/(4 pi r^2)
+// of it, so its share is proportional to dr/r^2, i.e. (1/a - 1/b).
+export function beltRings({ rIn, rOut }) {
   if (rIn === rOut) return [{ r: rIn, share: 1 }];
   const lo = Math.log(rIn);
   const step = (Math.log(rOut) - lo) / N_ANNULI;
+  const norm = 1 / rIn - 1 / rOut;
   const rings = [];
   for (let i = 0; i < N_ANNULI; i++) {
     const a = Math.exp(lo + step * i);
     const b = Math.exp(lo + step * (i + 1));
-    rings.push({ r: Math.sqrt(a * b), share: (b - a) / (rOut - rIn) });
+    rings.push({ r: Math.sqrt(a * b), share: (1 / a - 1 / b) / norm });
   }
   return rings;
 }
