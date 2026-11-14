@@ -61,3 +61,7 @@ test('small and large numbers use scientific notation in TeX', () => {
   const tex = find(equations(defaultState()), 'beltNorm').tex;
   assert.match(tex, /\\times ?10\^\{-?\d+\}/);
 });
+
+test('dust temperature formula shows the same 278.3 K coefficient it computes with', () => {
+  assert.ok(find(equations(defaultState()), 'dustTemp').tex.includes('278.3'));
+});

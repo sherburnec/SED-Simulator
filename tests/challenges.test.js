@@ -120,3 +120,59 @@ test('compareValues lists true and student values for the free parameters', () =
 test('challenge prompts are non-empty', () => {
   for (const c of CHALLENGES) assert.ok(c.prompt.length > 20 && c.title.length > 3);
 });
+
+test('no challenge frees R, d and the belt distance together (the SED is degenerate under scaling all three)', () => {
+  for (const c of CHALLENGES) {
+    const all = ['star.R', 'star.d', 'belt1.r'].every((p) => c.free.includes(p));
+    assert.equal(all, false, c.id);
+  }
+});
+
+function perturb(state, path) {
+  const s = JSON.parse(JSON.stringify(state));
+  switch (path) {
+    case 'star.T': s.star.T *= 1.4; break;
+    case 'star.R': s.star.R *= 1.4; break;
+    case 'star.d': s.star.d *= 1.4; break;
+    case 'belt1.r': s.belt1.rIn *= 1.6; s.belt1.rOut *= 1.6; break;
+    case 'belt1.f': s.belt1.f *= 1.6; break;
+    case 'belt1.beta': s.belt1.beta += 0.6; break;
+    case 'belt1.lambda0': s.belt1.lambda0 *= 1.6; break;
+    case 'belt2.r': s.belt2.rIn *= 1.6; s.belt2.rOut *= 1.6; break;
+    case 'belt2.f': s.belt2.f *= 1.6; break;
+    default: throw new Error(path);
+  }
+  return s;
+}
+
+test('every free parameter is identifiable: moving it alone makes chi2 clearly worse', () => {
+  for (const c of CHALLENGES) {
+    const hidden = c.makeHidden(mulberry32(11));
+    const pts = syntheticPhotometry(hidden, mulberry32(12));
+    const score = (st) => {
+      const m = totalModel(toPhysicsParams(st));
+      return chi2(pts, m.grid, m.total, c.free.length).chi2;
+    };
+    const base = score(hidden);
+    for (const path of c.free) {
+      const worse = score(perturb(hidden, path));
+      assert.ok(worse > base + 15, `${c.id} ${path}: ${base} -> ${worse}`);
+    }
+  }
+});
+
+test('challenge 3 keeps the distance fixed at 10 pc', () => {
+  const c = byId('star-and-dust');
+  assert.equal(c.free.includes('star.d'), false);
+  assert.equal(c.makeHidden(mulberry32(5)).star.d, 10);
+});
+
+test('challenge 4 prompt says which belt is which', () => {
+  assert.match(byId('two-belts').prompt, /belt 1.*(warm|inner)/i);
+});
+
+test('challenge 5 does not start with the true lambda0', () => {
+  const c = byId('submm-slope');
+  const hidden = c.makeHidden(mulberry32(1));
+  assert.notEqual(startState(c, hidden).belt1.lambda0, hidden.belt1.lambda0);
+});

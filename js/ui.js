@@ -45,8 +45,8 @@ const beltControls = (n) => {
   const b = `belt${n}`;
   return [
     { id: `b${n}f`, label: 'Brightness', symbol: 'L_dust/L★', range: 'f', get: (s) => s[b].f, set: setBelt(b, 'f') },
-    { id: `b${n}in`, label: 'Inner edge', symbol: 'r_in (AU)', range: 'r', get: (s) => s[b].rIn, set: setBelt(b, 'rIn') },
-    { id: `b${n}out`, label: 'Outer edge', symbol: 'r_out (AU)', range: 'r', get: (s) => s[b].rOut, set: setBelt(b, 'rOut') },
+    { id: `b${n}in`, label: 'Inner edge', symbol: 'r_in (AU)', range: 'r', get: (s) => s[b].rIn, set: setBelt(b, 'rIn'), resync: true },
+    { id: `b${n}out`, label: 'Outer edge', symbol: 'r_out (AU)', range: 'r', get: (s) => s[b].rOut, set: setBelt(b, 'rOut'), resync: true },
     { id: `b${n}l0`, label: 'Emissivity turnover', symbol: 'λ₀ (µm)', range: 'lambda0', get: (s) => s[b].lambda0, set: setBelt(b, 'lambda0') },
     { id: `b${n}beta`, label: 'Emissivity slope', symbol: 'β', range: 'beta', get: (s) => s[b].beta, set: setBelt(b, 'beta') },
   ];
@@ -71,7 +71,7 @@ export function valueToPos(key, value) {
 const fmt = (v) => String(Number(v.toPrecision(4)));
 
 // Build one slider + number input pair inside the element [data-ctl=id].
-function bindSlider({ id, label, symbol, range, get, set }) {
+function bindSlider({ id, label, symbol, range, get, set, resync = false }) {
   const host = document.querySelector(`[data-ctl="${id}"]`);
   host.innerHTML = `
     <div class="row"><label for="${id}-range">${label}<span class="sym">${symbol}</span></label></div>
@@ -84,12 +84,17 @@ function bindSlider({ id, label, symbol, range, get, set }) {
 
   rangeEl.addEventListener('input', () => {
     state = set(state, posToValue(range, Number(rangeEl.value)));
+    markCustom();
+    // Edge sliders can swap rIn and rOut when dragged past each other, so redraw all controls.
+    if (resync) { scheduleRender(true); return; }
     numEl.value = fmt(get(state));
     scheduleRender();
   });
   numEl.addEventListener('change', () => {
-    const v = Number(numEl.value);
-    if (Number.isFinite(v)) state = set(state, v);
+    const raw = numEl.value.trim();
+    const v = Number(raw);
+    // An emptied box reverts to the current value instead of jumping to the minimum.
+    if (raw !== '' && Number.isFinite(v)) { state = set(state, v); markCustom(); }
     scheduleRender(true);
   });
   return () => {
@@ -156,12 +161,14 @@ const syncers = [
 const beltOnEl = document.getElementById('belt-on');
 beltOnEl.addEventListener('change', () => {
   state = normalizeState({ ...state, belt1: { ...state.belt1, on: beltOnEl.checked } });
+  markCustom();
   scheduleRender(true);
 });
 
 const belt2OnEl = document.getElementById('belt2-on');
 belt2OnEl.addEventListener('change', () => {
   state = normalizeState({ ...state, belt2: { ...state.belt2, on: belt2OnEl.checked } });
+  markCustom();
   scheduleRender(true);
 });
 
@@ -200,7 +207,10 @@ const presetDescEl = document.getElementById('preset-desc');
 presetEl.addEventListener('change', () => {
   const p = PRESETS.find((x) => x.id === presetEl.value);
   if (!p) { presetDescEl.textContent = ''; return; }
+  const prev = state;
   state = applyPreset(p.id);
+  // Choosing a preset while in Advanced keeps Advanced mode, the flux unit and the bands.
+  if (prev.mode === 'advanced') state = { ...state, mode: 'advanced', unit: prev.unit, bands: prev.bands };
   presetDescEl.textContent = p.description;
   if (p.unverified.length) {
     const note = document.createElement('span');
@@ -208,8 +218,27 @@ presetEl.addEventListener('change', () => {
     note.textContent = ` Not yet confirmed against a primary source: ${p.unverified.join('; ')}.`;
     presetDescEl.appendChild(note);
   }
+  const src = document.createElement('details');
+  src.className = 'hint';
+  src.innerHTML = '<summary>Sources</summary>';
+  const list = document.createElement('ul');
+  for (const c of p.citations) {
+    const li = document.createElement('li');
+    li.textContent = c;
+    list.appendChild(li);
+  }
+  src.appendChild(list);
+  presetDescEl.appendChild(src);
   scheduleRender(true);
 });
+
+// Back to "Custom" once the student changes anything by hand.
+function markCustom() {
+  if (presetEl.value) {
+    presetEl.value = '';
+    presetDescEl.textContent = '';
+  }
+}
 
 function setMode(mode) {
   if (activeChallenge || mode === state.mode) return;
@@ -235,7 +264,7 @@ const statusEl = document.getElementById('upload-status');
 const errorsEl = document.getElementById('upload-errors');
 
 function loadUpload() {
-  const { points, errors } = parseCsv(uploadedText, fileUnitEl.value);
+  const { points, errors } = uploadedText ? parseCsv(uploadedText, fileUnitEl.value) : { points: [], errors: [] };
   uploadedPoints = points;
   errorsEl.innerHTML = '';
   for (const e of errors) {
@@ -253,6 +282,7 @@ fileInput.addEventListener('change', async () => {
   const file = fileInput.files && fileInput.files[0];
   if (!file) return;
   uploadedText = await file.text();
+  fileInput.value = ''; // so choosing the same (corrected) file again still fires change
   loadUpload();
 });
 fileUnitEl.addEventListener('change', () => { if (uploadedText) loadUpload(); });
@@ -273,7 +303,7 @@ document.getElementById('download-csv').addEventListener('click', () => {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
 // ---- challenges --------------------------------------------------------------
@@ -342,6 +372,7 @@ const fmtVal = (v) => (v !== 0 && (Math.abs(v) >= 1e4 || Math.abs(v) < 1e-2) ? v
 
 function renderChallengePanel() {
   const active = !!activeChallenge;
+  if (active) { challengePanel.hidden = false; challengeBtn.setAttribute('aria-pressed', 'true'); }
   document.getElementById('challenge-list').hidden = active;
   document.getElementById('challenge-active').hidden = !active;
   if (!active) return;
@@ -435,6 +466,9 @@ function renderReadouts(model) {
   }
   let html = '<dl class="readout-grid">' + rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('') + '</dl>';
   html += '<p class="hint">The peak you see on the plot depends on the flux unit: F_λ peaks at 2898/T µm, λF_λ near 3670/T, F_ν near 5100/T.</p>';
+  if (state.belt1.on || state.belt2.on) {
+    html += '<p class="hint">Dust distances assume blackbody grains at the fitted temperature. Real small grains run hotter, so belts seen in images usually sit 2 to 4 times farther out.</p>';
+  }
   if (fitStats) {
     const n = fitN;
     const k = fitK;
@@ -493,6 +527,34 @@ function scheduleRender(resync = false) {
   });
 }
 
+// The address bar follows the state, debounced so a long slider drag does not
+// hammer history.replaceState (browsers throttle it).
+let hashTimer = 0;
+let lastHash = location.hash.slice(1);
+function scheduleHashWrite() {
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(() => {
+    if (activeChallenge) return;
+    const h = encodeHash(state);
+    try {
+      history.replaceState(null, '', `#${h}`);
+      lastHash = h;
+    } catch {
+      // some embedders disallow replaceState; the link just isn't updated
+    }
+  }, 200);
+}
+
+// Pasting a share link into a tab that already has the page open only changes the hash.
+window.addEventListener('hashchange', () => {
+  const h = location.hash.slice(1);
+  if (h === lastHash || activeChallenge) return;
+  lastHash = h;
+  state = h ? decodeHash(h) : defaultState();
+  markCustom();
+  scheduleRender(true);
+});
+
 function render() {
   const model = totalModel(toPhysicsParams(state));
   lastModel = model;
@@ -513,11 +575,7 @@ function render() {
   renderEquations();
   const resolved = resolveColors(fig, cssColor);
   Plotly.react(plotEl, resolved.data, resolved.layout, { responsive: true, displaylogo: false });
-  try {
-    if (!activeChallenge) history.replaceState(null, '', `#${encodeHash(state)}`);
-  } catch {
-    // some embedders disallow replaceState; the link just isn't updated
-  }
+  scheduleHashWrite();
 }
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => scheduleRender());

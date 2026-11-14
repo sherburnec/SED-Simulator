@@ -66,3 +66,20 @@ test('all preset states survive normalizeState unchanged (inside slider ranges)'
 test('unknown preset id throws', () => {
   assert.throws(() => applyPreset('nope'));
 });
+
+test('Vega luminosity is close to the literature value of about 40 Lsun', () => {
+  const s = applyPreset('vega');
+  const L = luminosity(s.star.T, s.star.R);
+  assert.ok(L > 35 && L < 50, `L ${L}`);
+});
+
+test('epsilon Eridani fractional luminosity is flagged unverified', () => {
+  assert.ok(PRESETS.find((p) => p.id === 'eps-eri').unverified.some((u) => /^f\b/.test(u)));
+});
+
+test('citations say they are second-hand where no primary paper was opened', () => {
+  for (const p of PRESETS) {
+    if (p.id === 'sun') continue;
+    assert.ok(p.citations.every((c) => /quoted|search|not opened|context/i.test(c)), p.id);
+  }
+});

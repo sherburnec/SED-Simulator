@@ -4,7 +4,8 @@
 // grains would have the observed dust temperature (r = (278.3/T_d)^2 sqrt(L)).
 // Real small grains run hotter than blackbodies, so imaged belts sit farther out.
 //
-// Provenance: `citations` lists sources that were actually consulted.
+// Provenance: `citations` says where each value was seen. Most were read
+// second-hand from web search results and the primary papers were NOT opened.
 // `unverified` lists values that are still the project's approximate figures and
 // were not confirmed in a primary source; check them before classroom use.
 import { luminosity } from './physics.js';
@@ -23,13 +24,13 @@ const DEFS = [
   },
   {
     id: 'vega', name: 'Vega',
-    star: { T: 9600, R: 2.7, d: 7.7 }, belts: [{ Td: 50, f: 2e-5 }],
-    description: 'A bright A0 star with a cold dust belt that gives a far-infrared excess starting around 20 µm. Look for the dust bump rising above the star at 70 µm and beyond. Earlier IRAS fits gave a warmer single temperature of about 85 K, so the dust temperature here is a modelling choice.',
+    star: { T: 9600, R: 2.36, d: 7.7 }, belts: [{ Td: 50, f: 2e-5 }],
+    description: 'A bright A0 star with a cold dust belt. The infrared excess starts around 30 µm and the dust outshines the star by 70 µm. Earlier IRAS fits gave a warmer single temperature of about 85 K, so the dust temperature here is a modelling choice.',
     citations: [
-      'Su et al. 2005, ApJ 628, 487, Spitzer imaging of the Vega debris disk (https://w.astro.berkeley.edu/~kalas/disksite/library/su05a.pdf): disk size and structure.',
+      'Su et al. 2005, ApJ 628, 487, Spitzer imaging of the Vega debris disk (https://w.astro.berkeley.edu/~kalas/disksite/library/su05a.pdf), listed for context only: no preset value was taken from it and the paper was not opened.',
       'Distance of about 7.7 pc and IRAS single-blackbody fit (about 85 K, f about 2.5e-5) as summarised in web search results; primary source not opened.',
     ],
-    unverified: ['T★', 'R★ (rapid rotator; polar and equatorial radii differ)', 'dust temperature 50 K', 'f'],
+    unverified: ['T★', 'R★ (a polar radius of about 2.36 R☉ from memory, giving L of about 43 L☉; Vega is a rapid rotator)', 'dust temperature 50 K', 'f'],
   },
   {
     id: 'fomalhaut', name: 'Fomalhaut',
@@ -55,18 +56,18 @@ const DEFS = [
     star: { T: 5084, R: 0.74, d: 3.2 }, belts: [{ Td: 40, f: 3e-5 }],
     description: 'A nearby young K star, much cooler than the Sun, so its photosphere peaks in the near infrared. Its cold dust belt is faint compared with the star and shows up mainly beyond 70 µm. The adopted fractional luminosity is the smaller value reported in the literature.',
     citations: [
-      'Backman et al. 2009, ApJ 690, 1522, "Epsilon Eridani\'s Planetary Debris Disk" (https://arxiv.org/abs/0810.4564): distance 3.22 pc and a multi-belt model.',
-      'Teff 5084 K and fractional luminosity about 3e-5 (4e-5 in some fits) as tabulated in https://arxiv.org/pdf/1810.04194, citing Greaves et al. 2014 and Backman et al. 2009.',
+      'Backman et al. 2009, ApJ 690, 1522, "Epsilon Eridani\'s Planetary Debris Disk" (https://arxiv.org/abs/0810.4564): distance 3.22 pc and a multi-belt model, as quoted in web search results; paper not opened.',
+      'Teff 5084 K and fractional luminosity about 3e-5 (4e-5 in some fits), as quoted in web search results from the table in https://arxiv.org/pdf/1810.04194, which cites Greaves et al. 2014 and Backman et al. 2009; not opened.',
     ],
-    unverified: ['R★', 'dust temperature 40 K (the model has several belts; this is the cold one)'],
+    unverified: ['R★', 'f (taken from a secondary table; the project spec said 1e-4)', 'dust temperature 40 K (the model has several belts; this is the cold one)'],
   },
   {
     id: 'hr8799', name: 'HR 8799',
     star: { T: 7430, R: 1.44, d: 41 }, belts: [{ Td: 150, f: 4e-5 }, { Td: 45, f: 1.6e-4 }],
     description: 'An A-type star with directly imaged planets and two dust belts, a warm one inside the planets and a cold one outside them. The warm and cold belts give two separate infrared bumps that blend into a broad excess. This preset uses the second belt, so it opens in Advanced mode.',
     citations: [
-      'Su et al. 2009, ApJ 705, 314, "The Debris Disk Around HR 8799" (https://arxiv.org/abs/0909.2687): warm component about 150 K and cold component about 45 K.',
-      'Matthews et al. 2014, Herschel resolved imaging (https://arxiv.org/abs/1311.2977): fits of 153 K (warm) and 36 K (cold).',
+      'Su et al. 2009, ApJ 705, 314, "The Debris Disk Around HR 8799" (https://arxiv.org/abs/0909.2687): warm component about 150 K and cold component about 45 K, as quoted in web search results; paper not opened.',
+      'Matthews et al. 2014, Herschel resolved imaging (https://arxiv.org/abs/1311.2977): fits of 153 K (warm) and 36 K (cold), as quoted in web search results; paper not opened.',
     ],
     unverified: ['T★', 'R★', 'distance', 'how f is split between the two belts (total about 2e-4)'],
   },

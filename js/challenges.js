@@ -91,14 +91,14 @@ export const CHALLENGES = [
   {
     id: 'star-and-dust',
     title: '3. Star and dust',
-    prompt: 'Everything is unknown: star temperature, size and distance, and the dust belt\'s distance and brightness. Use the shape of the star\'s curve first, then the infrared excess.',
+    prompt: 'The distance is fixed at 10 pc. Everything else is unknown: the star\'s temperature and size, and the dust belt\'s distance and brightness. Use the shape of the star\'s curve first, then the infrared excess. (If the distance were free too, a bigger star farther away with a wider belt would fit equally well.)',
     mode: 'simple',
-    free: ['star.T', 'star.R', 'star.d', 'belt1.r', 'belt1.f'],
+    free: ['star.T', 'star.R', 'belt1.r', 'belt1.f'],
     makeHidden: (rng) => make('simple', {
       star: {
         T: sig3(logUniform(rng, 3500, 10000)),
         R: sig3(logUniform(rng, 0.7, 3)),
-        d: sig3(logUniform(rng, 5, 100)),
+        d: 10,
       },
       belt1: ring(sig3(logUniform(rng, 5, 200)), sig3(logUniform(rng, 1e-5, 1e-3))),
     }),
@@ -106,13 +106,13 @@ export const CHALLENGES = [
   {
     id: 'two-belts',
     title: '4. Two belts (Advanced)',
-    prompt: 'The star is known. There are two dust belts, one warm and one cold. Find the distance and brightness of each.',
+    prompt: 'The star is known. There are two dust belts. Belt 1 is the warm, inner one and belt 2 is the cold, outer one. Find the distance and brightness of each.',
     mode: 'advanced',
     free: ['belt1.r', 'belt1.f', 'belt2.r', 'belt2.f'],
     makeHidden: () => make('advanced', {
       star: { T: 7400, R: 1.4, d: 41 },
-      belt1: ring(8, 4e-5),
-      belt2: ring(90, 1.6e-4),
+      belt1: ring(8, 3e-4),
+      belt2: ring(90, 1.5e-4),
     }),
   },
   {
@@ -123,7 +123,7 @@ export const CHALLENGES = [
     free: ['belt1.beta', 'belt1.lambda0'],
     makeHidden: () => make('advanced', {
       star: { T: 9600, R: 2.7, d: 7.7 },
-      belt1: ring(80, 5e-5, { lambda0: 100, beta: 1.5 }),
+      belt1: ring(80, 5e-5, { lambda0: 150, beta: 1.5 }),
     }),
   },
 ];

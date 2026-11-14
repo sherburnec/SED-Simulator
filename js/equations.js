@@ -47,10 +47,10 @@ export function equations(state) {
     const ring = belt.rIn === belt.rOut;
     let tex;
     if (ring) {
-      tex = String.raw`T_{d${sub}} = 278\,\mathrm{K}\,(${sig3(L)})^{1/4}\,(${sig3(belt.rIn)})^{-1/2} = ${sig3(dustTemp(L, belt.rIn))}\,\mathrm{K}`;
+      tex = String.raw`T_{d${sub}} = 278.3\,\mathrm{K}\,(${sig3(L)})^{1/4}\,(${sig3(belt.rIn)})^{-1/2} = ${sig3(dustTemp(L, belt.rIn))}\,\mathrm{K}`;
     } else {
       const [lo, hi] = beltTempRange(L, belt);
-      tex = String.raw`T_{d${sub}}(r) = 278\,\mathrm{K}\,(${sig3(L)})^{1/4}\,r^{-1/2}:\; ${sig3(belt.rIn)}\text{ to }${sig3(belt.rOut)}\,\mathrm{AU} \Rightarrow ${sig3(hi)}\,\mathrm{K}\text{ to }${sig3(lo)}\,\mathrm{K}`;
+      tex = String.raw`T_{d${sub}}(r) = 278.3\,\mathrm{K}\,(${sig3(L)})^{1/4}\,r^{-1/2}:\; ${sig3(belt.rIn)}\text{ to }${sig3(belt.rOut)}\,\mathrm{AU} \Rightarrow ${sig3(hi)}\,\mathrm{K}\text{ to }${sig3(lo)}\,\mathrm{K}`;
     }
     out.push({ id, tex, controls: ['T', 'R', ...ctl] });
 
