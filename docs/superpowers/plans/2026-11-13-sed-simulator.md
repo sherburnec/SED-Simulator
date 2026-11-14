@@ -152,7 +152,7 @@ ring case:  rIn === rOut → single ring, f_share = f
 
 Cache `NORM_GRID` at module load (built once).
 
-- [ ] **Step 1: Write failing tests**:
+- [x] **Step 1: Write failing tests**:
 
 ```js
 test('dust at 1 AU around 1 Lsun is 278.3 K', () => assert.ok(Math.abs(dustTemp(1, 1) - 278.3) < 1e-9));
@@ -180,10 +180,10 @@ test('corners produce only finite, non-negative values', () => {
 test('two extended belts compute in under 20 ms', () => { /* time 10 runs of totalModel, average < 20 ms */ });
 ```
 
-- [ ] **Step 2: Run** `npm test` → new tests FAIL.
-- [ ] **Step 3: Implement** the exports above. Comment each with its spec equation.
-- [ ] **Step 4: Run** `npm test` → all PASS.
-- [ ] **Step 5: Commit** `feat: debris belt emission and total model`.
+- [x] **Step 2: Run** `npm test` → new tests FAIL.
+- [x] **Step 3: Implement** the exports above. Comment each with its spec equation.
+- [x] **Step 4: Run** `npm test` → all PASS.
+- [x] **Step 5: Commit** `feat: debris belt emission and total model`.
 
 ---
 
