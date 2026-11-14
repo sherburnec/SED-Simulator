@@ -87,3 +87,13 @@ button[aria-pressed="true"] { background: var(--accent); color: var(--bg); borde
   .layout { grid-template-columns: 1fr; padding: 12px 16px; }
   .plot { height: 380px; }
 }
+
+.seg { display: inline-flex; }
+.seg button { border-radius: 0; }
+.seg button:first-child { border-radius: 6px 0 0 6px; }
+.seg button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+.hint { color: var(--muted); font-size: 0.85em; margin: 4px 0 8px; }
+.errors { color: var(--data); font-size: 0.85em; padding-left: 18px; margin: 4px 0 8px; }
+.errors:empty { display: none; }
+.panel select, .panel input[type="file"] { max-width: 100%; margin: 4px 0 8px; }
+[hidden] { display: none !important; }

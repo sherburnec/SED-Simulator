@@ -370,8 +370,8 @@ Behaviour (all per the spec's "Advanced panel", "Data upload" and "Plot" section
 - Export: a "Download CSV" button (`modelToCsv` in the current unit, filename `sed-model.csv`). PNG export uses Plotly's modebar.
 - The χ² readout (Task 8 places it) is computed here as `chi2(uploadedPoints, grid, total, countFreeParams(state))`. Store it on a module-level `fitStats` for Task 8.
 
-- [ ] **Step 1: Build.**
-- [ ] **Step 2: Verify in browser.** Expected: extended belt broadens the bump. β = 2 steepens the submm fall-off. Belt 2 adds a second bump. Changing the unit moves the peak marker. Bands draw and label. Uploading this file shows 3 points and one row error:
+- [x] **Step 1: Build.**
+- [ ] **Step 2: Verify in browser (NOT RUN: needs the user).** Expected: extended belt broadens the bump. β = 2 steepens the submm fall-off. Belt 2 adds a second bump. Changing the unit moves the peak marker. Bands draw and label. Uploading this file shows 3 points and one row error:
   ```
   wavelength_um,flux,flux_err
   12,0.9,0.05
@@ -380,7 +380,7 @@ Behaviour (all per the spec's "Advanced panel", "Data upload" and "Plot" section
   100,0.2,0.02
   ```
   Toggling to Simple asks for confirmation, then hides the points; back to Advanced, the points reappear. Dragging sliders with two extended belts and data loaded shows no visible lag. Download CSV opens with a header and 500 rows.
-- [ ] **Step 3: Commit** `feat: advanced controls, photometry upload and CSV export`.
+- [x] **Step 3: Commit** `feat: advanced controls, photometry upload and CSV export`.
 
 ---
 
