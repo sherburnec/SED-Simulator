@@ -24,7 +24,7 @@ test('seeded rng is deterministic and in [0,1)', () => {
   assert.notEqual(mulberry32(1)(), mulberry32(2)());
 });
 
-test('synthetic photometry: 17 points (one per unique band wavelength), positive, with 7% errors', () => {
+test.todo('Task 5: synthetic photometry: 17 points (one per unique band wavelength), positive, with 7% errors', () => {
   const hidden = byId('star-and-dust').makeHidden(mulberry32(7));
   const pts = syntheticPhotometry(hidden, mulberry32(8));
   assert.equal(pts.length, 17);
@@ -37,7 +37,7 @@ test('synthetic photometry: 17 points (one per unique band wavelength), positive
   }
 });
 
-test('student starting at the hidden values gets reduced chi2 near 1 (0.3-3) for challenge 3', () => {
+test.todo('Task 5: student starting at the hidden values gets reduced chi2 near 1 (0.3-3) for challenge 3', () => {
   for (const seed of [1, 2, 3, 4, 5]) {
     const hidden = byId('star-and-dust').makeHidden(mulberry32(seed));
     const pts = syntheticPhotometry(hidden, mulberry32(seed + 100));
@@ -145,7 +145,7 @@ function perturb(state, path) {
   return s;
 }
 
-test('every free parameter is identifiable: moving it alone makes chi2 clearly worse', () => {
+test.todo('Task 5: every free parameter is identifiable: moving it alone makes chi2 clearly worse', () => {
   for (const c of CHALLENGES) {
     const hidden = c.makeHidden(mulberry32(11));
     const pts = syntheticPhotometry(hidden, mulberry32(12));

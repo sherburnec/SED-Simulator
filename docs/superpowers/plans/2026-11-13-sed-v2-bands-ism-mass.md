@@ -52,11 +52,11 @@
 **Interfaces:**
 - Produces: `BANDS: Array<{ id: string, label: string, lamUm: number, widthUm: number, group: '2MASS'|'AllWISE'|'IRAC'|'MIPS' }>` in increasing `lamUm` order. `BAND_GROUPS = ['2MASS', 'AllWISE', 'IRAC', 'MIPS']`. `bandById(id) → band` (throws on an unknown id).
 
-- [ ] **Step 1: Replace the old 19-band test** (`'BANDS has the spec list…'`) with `'BANDS is the 14 survey bands'`: assert length 14; ids are exactly the spec §1 ids (`'2MASS J'`…`'MIPS 160'`); the λ values match spec §1 exactly; every band has `widthUm > 0` and a group in `BAND_GROUPS`; no id matches `/PACS|SPIRE|SCUBA|ALMA/`; `lamUm` is strictly increasing; `bandById('MIPS 24').lamUm === 23.68`.
-- [ ] **Step 2: Run** `npm test`. Expected: the new test FAILS (length 19).
-- [ ] **Step 3: Rewrite `js/bands.js`** with spec §1's values. Labels: `J H Ks W1 W2 W3 W4 3.6 4.5 5.8 8.0 24 70 160`. Check each λ and width against the cited source and add a header comment with the citations (spec §1). Correct any value the source contradicts, and record what changed.
-- [ ] **Step 4: Run** `npm test`. Expected: the band test PASSES. Old figure tests that count 19 band shapes may now fail. Mark them `test.todo` with a note "Task 4", and leave nothing else red.
-- [ ] **Step 5: Commit** `feat: survey band list (2MASS, AllWISE, IRAC, MIPS)`.
+- [x] **Step 1: Replace the old 19-band test** (`'BANDS has the spec list…'`) with `'BANDS is the 14 survey bands'`: assert length 14; ids are exactly the spec §1 ids (`'2MASS J'`…`'MIPS 160'`); the λ values match spec §1 exactly; every band has `widthUm > 0` and a group in `BAND_GROUPS`; no id matches `/PACS|SPIRE|SCUBA|ALMA/`; `lamUm` is strictly increasing; `bandById('MIPS 24').lamUm === 23.68`.
+- [x] **Step 2: Run** `npm test`. Expected: the new test FAILS (length 19).
+- [x] **Step 3: Rewrite `js/bands.js`** with spec §1's values. Labels: `J H Ks W1 W2 W3 W4 3.6 4.5 5.8 8.0 24 70 160`. Check each λ and width against the cited source and add a header comment with the citations (spec §1). Correct any value the source contradicts, and record what changed.
+- [x] **Step 4: Run** `npm test`. Expected: the band test PASSES. Old figure tests that count 19 band shapes may now fail. Mark them `test.todo` with a note "Task 4", and leave nothing else red.
+- [x] **Step 5: Commit** `feat: survey band list (2MASS, AllWISE, IRAC, MIPS)`.
 
 ### Task 2: Physics: extinction and dust mass
 

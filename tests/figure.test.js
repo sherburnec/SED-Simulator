@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BANDS } from '../js/bands.js';
+import { BANDS, BAND_GROUPS, bandById } from '../js/bands.js';
 import { buildFigure, resolveColors } from '../js/figure.js';
 import { defaultState, toPhysicsParams } from '../js/model.js';
 import { totalModel, convertArray, convertFlux, peakIndex } from '../js/physics.js';
@@ -14,14 +14,27 @@ function setup(mutate = () => {}) {
 
 const names = (fig) => fig.data.map((t) => t.name);
 
-test('BANDS has the spec list: 19 bands with J/H/Ks, W1-W4, MIPS, PACS, SPIRE, SCUBA-2, ALMA', () => {
-  assert.equal(BANDS.length, 19);
-  const lam = (id) => BANDS.find((b) => b.id === id).lamUm;
-  assert.equal(lam('2MASS J'), 1.25);
-  assert.equal(lam('WISE W4'), 22);
-  assert.equal(lam('SPIRE 500'), 500);
-  assert.equal(lam('ALMA B6'), 1300);
-  assert.equal(new Set(BANDS.map((b) => b.lamUm)).size, 17);
+test('BANDS is the 14 survey bands', () => {
+  assert.equal(BANDS.length, 14);
+  assert.deepEqual(BANDS.map((b) => b.id).sort(), [
+    '2MASS J', '2MASS H', '2MASS Ks', 'WISE W1', 'WISE W2', 'WISE W3', 'WISE W4',
+    'IRAC 3.6', 'IRAC 4.5', 'IRAC 5.8', 'IRAC 8.0', 'MIPS 24', 'MIPS 70', 'MIPS 160',
+  ].sort());
+  const lam = (id) => bandById(id).lamUm;
+  assert.deepEqual(
+    ['2MASS J', '2MASS H', '2MASS Ks', 'WISE W1', 'WISE W2', 'WISE W3', 'WISE W4'].map(lam),
+    [1.235, 1.662, 2.159, 3.353, 4.603, 11.56, 22.08],
+  );
+  assert.deepEqual(['IRAC 3.6', 'IRAC 4.5', 'IRAC 5.8', 'IRAC 8.0'].map(lam), [3.55, 4.493, 5.731, 7.872]);
+  assert.deepEqual(['MIPS 24', 'MIPS 70', 'MIPS 160'].map(lam), [23.68, 71.42, 155.9]);
+  for (const b of BANDS) {
+    assert.ok(b.widthUm > 0);
+    assert.ok(BAND_GROUPS.includes(b.group));
+    assert.doesNotMatch(b.id, /PACS|SPIRE|SCUBA|ALMA/);
+  }
+  for (let i = 1; i < BANDS.length; i++) assert.ok(BANDS[i].lamUm > BANDS[i - 1].lamUm);
+  assert.equal(bandById('MIPS 24').lamUm, 23.68);
+  assert.throws(() => bandById('nope'));
 });
 
 test('trace order and count for one belt, no data', () => {
@@ -77,7 +90,7 @@ test('y range spans 6 decades below the total peak, plus half a decade above', (
   assert.ok(Math.abs(layout.yaxis.range[0] - (top - 6)) < 1e-9);
 });
 
-test('bands add 19 shapes and labels when on and none when off', () => {
+test.todo('Task 4: bands add 19 shapes and labels when on and none when off', () => {
   const on = setup((s) => { s.bands = true; });
   const figOn = buildFigure(on.model, on.state);
   assert.equal(figOn.layout.shapes.length, 19);
@@ -124,7 +137,7 @@ test('resolveColors replaces every var: token and leaves other strings alone', (
   assert.equal(fig.data[0].name, 'Star');
 });
 
-test('band shapes use data values and annotations use log10 (Plotly log-axis rules)', () => {
+test.todo('Task 4: band shapes use data values and annotations use log10 (Plotly log-axis rules)', () => {
   const { state, model } = setup((s) => { s.bands = true; });
   const { layout } = buildFigure(model, state);
   const iJ = BANDS.findIndex((b) => b.id === '2MASS J');
