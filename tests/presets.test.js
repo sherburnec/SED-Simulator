@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PRESETS, applyPreset } from '../js/presets.js';
-import { normalizeState, hasAdvancedPhysics, toPhysicsParams } from '../js/model.js';
+import { normalizeState, hasAdvancedPhysics, toPhysicsParams, beltFrac } from '../js/model.js';
 import { luminosity, dustTemp } from '../js/physics.js';
 
 test('there are the six spec presets', () => {
@@ -81,5 +81,23 @@ test('citations say they are second-hand where no primary paper was opened', () 
   for (const p of PRESETS) {
     if (p.id === 'sun') continue;
     assert.ok(p.citations.every((c) => /quoted|search|not opened|context/i.test(c)), p.id);
+  }
+});
+
+test('preset f survives the mass conversion', () => {
+  for (const p of PRESETS) {
+    const s = applyPreset(p.id);
+    const belts = [s.belt1, s.belt2].filter((b) => b.on);
+    belts.forEach((b, i) => {
+      assert.ok(Math.abs(beltFrac(b) / p.def.belts[i].f - 1) < 0.005, `${p.id} belt ${i}`);
+    });
+  }
+});
+
+test('presets link extinction and keep hold-brightness off', () => {
+  for (const p of PRESETS) {
+    const s = applyPreset(p.id);
+    assert.equal(s.ism.linked, true, p.id);
+    assert.equal(s.holdBrightness, false, p.id);
   }
 });

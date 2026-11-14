@@ -8,7 +8,7 @@
 // second-hand from web search results and the primary papers were NOT opened.
 // `unverified` lists values that are still the project's approximate figures and
 // were not confirmed in a primary source; check them before classroom use.
-import { luminosity } from './physics.js';
+import { luminosity, massForFrac } from './physics.js';
 import { defaultState, normalizeState, hasAdvancedPhysics } from './model.js';
 
 const radiusForTemp = (L, Td) => Number((((278.3 / Td) ** 2) * Math.sqrt(L)).toPrecision(4));
@@ -94,7 +94,8 @@ export function applyPreset(id) {
   const beltState = (b, fallback) => {
     if (!b) return { ...fallback, on: false };
     const r = radiusForTemp(L, b.Td);
-    return { on: true, rIn: r, rOut: r, f: b.f, lambda0: 100, beta: 0 };
+    // Brightness f is stored as the dust mass that gives it at this radius.
+    return { on: true, rIn: r, rOut: r, M: Number(massForFrac(b.f, r, r).toPrecision(4)), lambda0: 100, beta: 0 };
   };
   const state = normalizeState({
     ...base,

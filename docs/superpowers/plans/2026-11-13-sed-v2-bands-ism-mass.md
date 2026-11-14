@@ -169,7 +169,7 @@
   - `startState` forces `holdBrightness = false`.
   - `syntheticPhotometry` returns one point per band (14), at `BANDS[i].lamUm`.
 
-- [ ] **Step 1: Write the failing tests** (update the existing ones):
+- [x] **Step 1: Write the failing tests** (update the existing ones):
   - presets: `'preset f survives the mass conversion'`: for every preset belt, `beltFrac` of the applied state is within 0.5% of the def's f. `'presets link extinction'`.
   - challenges: `'five challenges in the v2 order'` (ids and modes above). The photometry test becomes 14 points whose λ equal `BANDS.map(b => b.lamUm)`.
   - challenges: `'reddened star: hidden ranges'` (T 4000–9000, R 0.8–2.5, d 50, Av 1–5, `ism.linked === false`, belt off) over seeds 1–50.
@@ -179,10 +179,10 @@
   - challenges: `'challenge 5 is fixed across seeds and gives f ≈ 3e-4 and 1.5e-4'` (within 1%).
   - challenges: `'startState turns hold-brightness off'`.
   - Delete the `submm-slope` tests.
-- [ ] **Step 2: Run** `npm test`. Expected: the new tests FAIL.
-- [ ] **Step 3: Implement** using spec §7–§8. Hidden belts draw f log-uniform as before, then store `M = sig3(massForFrac(f, r, r))`. Challenge 5 stores `sig3(massForFrac(3e-4, 8, 8))` and `sig3(massForFrac(1.5e-4, 90, 90))`. Prompt for challenge 2: R★ and d are given, the distance link is switched off, find T★ and A_V, and use IRAC/MIPS (barely dimmed) to pin T first.
-- [ ] **Step 4: Run** `npm test`. Expected: the whole suite is green, with no `test.todo` left.
-- [ ] **Step 5: Commit** `feat: presets and challenges use dust mass and extinction; add reddened-star challenge`.
+- [x] **Step 2: Run** `npm test`. Expected: the new tests FAIL.
+- [x] **Step 3: Implement** using spec §7–§8. Hidden belts draw f log-uniform as before, then store `M = sig3(massForFrac(f, r, r))`. Challenge 5 stores `sig3(massForFrac(3e-4, 8, 8))` and `sig3(massForFrac(1.5e-4, 90, 90))`. Prompt for challenge 2: R★ and d are given, the distance link is switched off, find T★ and A_V, and use IRAC/MIPS (barely dimmed) to pin T first.
+- [x] **Step 4: Run** `npm test`. Expected: the whole suite is green, with no `test.todo` left.
+- [x] **Step 5: Commit** `feat: presets and challenges use dust mass and extinction; add reddened-star challenge`.
 
 ### Task 6: UI wiring, page, README and browser pass
 

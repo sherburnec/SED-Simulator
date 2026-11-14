@@ -33,7 +33,7 @@ test('defaults match the spec', () => {
   assert.deepEqual(RANGES.T, [2500, 40000, 'log']);
   assert.deepEqual(RANGES.d, [1, 3000, 'log']);
   assert.deepEqual(RANGES.Av, [0, 10, 'lin']);
-  assert.deepEqual(RANGES.M, [1e-8, 1, 'log']);
+  assert.deepEqual(RANGES.M, [1e-8, 100, 'log']);
 });
 
 test('hash round-trips a full advanced state to 4 sig figs', () => {
@@ -159,7 +159,7 @@ test('hold brightness keeps f when the belt moves', () => {
 test('hold brightness clamps mass at the range edge', () => {
   const s = { ...defaultState(), holdBrightness: true, belt1: { ...defaultState().belt1, rIn: 1, rOut: 1, M: 0.5 } };
   const m = setBeltRadii(s, 'belt1', 1000, 1000);
-  assert.equal(m.belt1.M, 1);
+  assert.equal(m.belt1.M, 100);
   assert.ok(Number.isFinite(beltFrac(m.belt1)));
   assert.ok(beltFrac(m.belt1) < beltFrac(s.belt1));
 });

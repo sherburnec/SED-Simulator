@@ -1,6 +1,6 @@
 // Mystery-SED challenges: definitions, seeded RNG and synthetic photometry.
 // Pure, no DOM. The UI (ui.js) runs them.
-import { totalModel, interpLogLog } from './physics.js';
+import { totalModel, interpLogLog, massForFrac } from './physics.js';
 import { BANDS } from './bands.js';
 import { defaultState, normalizeState, toPhysicsParams } from './model.js';
 
@@ -39,30 +39,27 @@ const PARAMS = {
     label: 'Belt 1 distance (AU)', controls: ['r', 'b1in', 'b1out'],
     get: (s) => s.belt1.rIn, reset: (s, def) => { s.belt1.rIn = def.belt1.rIn; s.belt1.rOut = def.belt1.rIn; },
   },
-  'belt1.f': {
-    label: 'Belt 1 brightness (L_dust/L★)', controls: ['f'],
-    get: (s) => s.belt1.f, reset: (s, def) => { s.belt1.f = def.belt1.f; },
-  },
-  'belt1.lambda0': {
-    label: 'Belt 1 λ₀ (µm)', controls: ['b1l0'],
-    get: (s) => s.belt1.lambda0, reset: (s, def) => { s.belt1.lambda0 = def.belt1.lambda0; },
-  },
-  'belt1.beta': {
-    label: 'Belt 1 β', controls: ['b1beta'],
-    get: (s) => s.belt1.beta, reset: (s, def) => { s.belt1.beta = def.belt1.beta; },
+  'belt1.M': {
+    label: 'Belt 1 dust mass (M⊕)', controls: ['M'],
+    get: (s) => s.belt1.M, reset: (s, def) => { s.belt1.M = def.belt1.M; },
   },
   'belt2.r': {
     label: 'Belt 2 distance (AU)', controls: ['b2in', 'b2out'],
     get: (s) => s.belt2.rIn, reset: (s, def) => { s.belt2.rIn = def.belt2.rIn; s.belt2.rOut = def.belt2.rIn; },
   },
-  'belt2.f': {
-    label: 'Belt 2 brightness (L_dust/L★)', controls: ['b2f'],
-    get: (s) => s.belt2.f, reset: (s, def) => { s.belt2.f = def.belt2.f; },
+  'belt2.M': {
+    label: 'Belt 2 dust mass (M⊕)', controls: ['b2M'],
+    get: (s) => s.belt2.M, reset: (s, def) => { s.belt2.M = def.belt2.M; },
+  },
+  'ism.Av': {
+    label: 'Interstellar dimming A_V (mag)', controls: ['Av'],
+    get: (s) => s.ism.Av, reset: (s) => { s.ism.Av = 0; },
   },
 };
 
 const SUN = { T: 5772, R: 1, d: 10 };
-const ring = (r, f, extra = {}) => ({ on: true, rIn: r, rOut: r, f, lambda0: 100, beta: 0, ...extra });
+// A belt ring at r AU with fractional luminosity f, stored as the mass that gives it.
+const ring = (r, f) => ({ on: true, rIn: r, rOut: r, M: sig3(massForFrac(f, r, r)), lambda0: 100, beta: 0 });
 const make = (mode, parts) => normalizeState({ ...defaultState(), mode, ...parts });
 
 export const CHALLENGES = [
@@ -78,52 +75,53 @@ export const CHALLENGES = [
     }),
   },
   {
-    id: 'find-dust',
-    title: '2. Find the dust',
-    prompt: 'The star is a Sun-like star at 10 pc, already set for you. There is a dust belt. Find how far from the star it is and how bright it is.',
+    id: 'reddened-star',
+    title: '2. Reddened star',
+    prompt: 'This star is 50 pc away and has no dust of its own, but starlight is dimmed on its way to us by interstellar dust. The star\'s size and distance are known. Find its temperature and the dimming A_V. Hint: the IRAC and MIPS points barely feel the dust, so they pin the temperature first; then the dimming explains the optical and near-infrared points.',
     mode: 'simple',
-    free: ['belt1.r', 'belt1.f'],
+    free: ['star.T', 'ism.Av'],
+    makeHidden: (rng) => make('simple', {
+      star: { T: sig3(logUniform(rng, 4000, 9000)), R: sig3(logUniform(rng, 0.8, 2.5)), d: 50 },
+      ism: { linked: false, Av: sig3(1 + 4 * rng()) },
+      belt1: { ...defaultState().belt1, on: false },
+    }),
+  },
+  {
+    id: 'find-dust',
+    title: '3. Find the dust',
+    prompt: 'The star is a Sun-like star at 10 pc, already set for you. There is a dust belt. Find how far from the star it is and how much dust it holds.',
+    mode: 'simple',
+    free: ['belt1.r', 'belt1.M'],
     makeHidden: (rng) => make('simple', {
       star: { ...SUN },
-      belt1: ring(sig3(logUniform(rng, 5, 200)), sig3(logUniform(rng, 1e-5, 1e-3))),
+      belt1: ring(sig3(logUniform(rng, 5, 100)), sig3(logUniform(rng, 1e-5, 1e-3))),
     }),
   },
   {
     id: 'star-and-dust',
-    title: '3. Star and dust',
-    prompt: 'The distance is fixed at 10 pc. Everything else is unknown: the star\'s temperature and size, and the dust belt\'s distance and brightness. Use the shape of the star\'s curve first, then the infrared excess. (If the distance were free too, a bigger star farther away with a wider belt would fit equally well.)',
+    title: '4. Star and dust',
+    prompt: 'The distance is fixed at 10 pc. Everything else is unknown: the star\'s temperature and size, and the dust belt\'s distance and mass. Use the shape of the star\'s curve first, then the infrared excess. (If the distance were free too, a bigger star farther away with a wider belt would fit equally well.)',
     mode: 'simple',
-    free: ['star.T', 'star.R', 'belt1.r', 'belt1.f'],
+    free: ['star.T', 'star.R', 'belt1.r', 'belt1.M'],
     makeHidden: (rng) => make('simple', {
       star: {
         T: sig3(logUniform(rng, 3500, 10000)),
         R: sig3(logUniform(rng, 0.7, 3)),
         d: 10,
       },
-      belt1: ring(sig3(logUniform(rng, 5, 200)), sig3(logUniform(rng, 1e-5, 1e-3))),
+      belt1: ring(sig3(logUniform(rng, 5, 100)), sig3(logUniform(rng, 1e-5, 1e-3))),
     }),
   },
   {
     id: 'two-belts',
-    title: '4. Two belts (Advanced)',
-    prompt: 'The star is known. There are two dust belts. Belt 1 is the warm, inner one and belt 2 is the cold, outer one. Find the distance and brightness of each.',
+    title: '5. Two belts (Advanced)',
+    prompt: 'The star is known. There are two dust belts. Belt 1 is the warm, inner one and belt 2 is the cold, outer one. Find the distance and dust mass of each.',
     mode: 'advanced',
-    free: ['belt1.r', 'belt1.f', 'belt2.r', 'belt2.f'],
+    free: ['belt1.r', 'belt1.M', 'belt2.r', 'belt2.M'],
     makeHidden: () => make('advanced', {
       star: { T: 7400, R: 1.4, d: 41 },
       belt1: ring(8, 3e-4),
       belt2: ring(90, 1.5e-4),
-    }),
-  },
-  {
-    id: 'submm-slope',
-    title: '5. Submillimetre slope (Advanced)',
-    prompt: 'The star and the belt\'s distance and brightness are known. The dust is not made of perfect blackbody grains: find the emissivity slope β (and the turnover λ₀) from the points beyond 100 µm.',
-    mode: 'advanced',
-    free: ['belt1.beta', 'belt1.lambda0'],
-    makeHidden: () => make('advanced', {
-      star: { T: 9600, R: 2.7, d: 7.7 },
-      belt1: ring(80, 5e-5, { lambda0: 150, beta: 1.5 }),
     }),
   },
 ];
@@ -133,11 +131,11 @@ function gaussian(rng) {
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
-// One point per unique band wavelength (BANDS repeats 70 and 160 µm), value =
+// One point per band (14, in increasing wavelength), value =
 // model total * (1 + noiseFrac * gaussian), error = noiseFrac * value.
 export function syntheticPhotometry(hidden, rng, noiseFrac = 0.07) {
   const model = totalModel(toPhysicsParams(hidden));
-  const lams = [...new Set(BANDS.map((b) => b.lamUm))].sort((a, b) => a - b);
+  const lams = BANDS.map((b) => b.lamUm);
   return lams.map((lamUm) => {
     const truth = interpLogLog(model.grid, model.total, lamUm);
     const fLam = Math.max(truth * (1 + noiseFrac * gaussian(rng)), truth * 0.01);
@@ -152,6 +150,7 @@ export function startState(challenge, hidden) {
   const def = defaultState();
   for (const path of challenge.free) PARAMS[path].reset(s, def);
   s.mode = challenge.mode;
+  s.holdBrightness = false;
   return normalizeState(s);
 }
 

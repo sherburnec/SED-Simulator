@@ -8,7 +8,7 @@ export const RANGES = {
   d: [1, 3000, 'log'],
   r: [0.1, 1000, 'log'],
   Av: [0, 10, 'lin'],
-  M: [1e-8, 1, 'log'], // Earth masses
+  M: [1e-8, 100, 'log'], // Earth masses
   lambda0: [10, 1000, 'log'],
   beta: [0, 2, 'lin'],
 };
