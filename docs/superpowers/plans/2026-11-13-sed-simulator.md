@@ -427,7 +427,7 @@ test('each equation lists the sliders that change it', () => {});
 
 Presets and targets from the spec's table: Sun (`belt1.on: false`; the description notes the Sun's real Kuiper-belt dust is far fainter than the slider minimum), Vega (~50 K), Fomalhaut (~50 K), β Pic (~100 K), ε Eri (~40 K), HR 8799 (~150 K + ~45 K, uses belt 2). **Look up and cite** T★, R★, d, f and dust temperature for each from published sources (e.g. SIMBAD for d; papers for disk fits) and record them in `citations`. If a source value differs from the spec's approximate table, use the source and note it in the commit message. Set each belt's `rIn = rOut = (278.3 / T_target)² · √L★` so the blackbody dust temperature matches. Each description is 2–3 sentences, and one of them states that the radius is chosen to match the dust temperature, not the imaged radius.
 
-- [ ] **Step 1: Write failing tests**:
+- [x] **Step 1: Write failing tests**:
 
 ```js
 test('every preset has at least one citation and a 2–3 sentence description', () => {});
@@ -436,9 +436,9 @@ test('HR 8799 uses belt 2 and opens in advanced mode', () => {});
 test('all preset states survive normalizeState unchanged (inside slider ranges)', () => {});
 ```
 
-- [ ] **Step 2: Run** → FAIL. **Step 3: Research values and implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Verify in browser:** each preset loads and shows its description under the dropdown.
-- [ ] **Step 6: Commit** `feat: real-system presets with citations`.
+- [x] **Step 2: Run** → FAIL. **Step 3: Research values and implement.** **Step 4: Run** → PASS.
+- [ ] **Step 5 (NOT RUN: needs the user): Verify in browser:** each preset loads and shows its description under the dropdown.
+- [x] **Step 6: Commit** `feat: real-system presets with citations`.
 
 ---
 

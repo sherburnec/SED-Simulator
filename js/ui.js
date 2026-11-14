@@ -10,6 +10,7 @@ import {
 import { buildFigure, resolveColors } from './figure.js';
 import { parseCsv, modelToCsv } from './dataio.js';
 import { equations } from './equations.js';
+import { PRESETS, applyPreset } from './presets.js';
 
 // Live state shared with the feature modules wired in below.
 let state = location.hash.length > 1 ? decodeHash(location.hash) : defaultState();
@@ -179,6 +180,31 @@ topnav.insertAdjacentHTML('beforeend', `
     <button type="button" id="mode-simple">Simple</button>
     <button type="button" id="mode-advanced">Advanced</button>
   </div>`);
+
+// ---- presets -------------------------------------------------------------------
+
+topnav.insertAdjacentHTML('afterbegin', `
+  <label class="inline">Preset
+    <select id="preset">
+      <option value="">Custom</option>
+      ${PRESETS.map((p) => `<option value="${p.id}">${p.name}</option>`).join('')}
+    </select>
+  </label>`);
+const presetEl = document.getElementById('preset');
+const presetDescEl = document.getElementById('preset-desc');
+presetEl.addEventListener('change', () => {
+  const p = PRESETS.find((x) => x.id === presetEl.value);
+  if (!p) { presetDescEl.textContent = ''; return; }
+  state = applyPreset(p.id);
+  presetDescEl.textContent = p.description;
+  if (p.unverified.length) {
+    const note = document.createElement('span');
+    note.className = 'hint';
+    note.textContent = ` Not yet confirmed against a primary source: ${p.unverified.join('; ')}.`;
+    presetDescEl.appendChild(note);
+  }
+  scheduleRender(true);
+});
 
 function setMode(mode) {
   if (mode === state.mode) return;
