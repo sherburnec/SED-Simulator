@@ -193,6 +193,10 @@ export function excessRatio(gridUm, total, star, lamUm) {
 }
 
 // Linear in (log lambda, log value). NaN outside the grid.
+export function interpLogLog(gridUm, values, lamUm) {
+  return interpLogLogRaw(gridUm, values, lamUm);
+}
+
 function interpLogLogRaw(gridUm, values, lamUm) {
   const n = gridUm.length;
   if (!(lamUm >= gridUm[0] && lamUm <= gridUm[n - 1])) return NaN;
@@ -207,4 +211,28 @@ function interpLogLogRaw(gridUm, values, lamUm) {
   if (!(v0 > 0) || !(v1 > 0)) return v0 + (v1 - v0) * ((lamUm - gridUm[lo]) / (gridUm[hi] - gridUm[lo]));
   const t = Math.log(lamUm / gridUm[lo]) / Math.log(gridUm[hi] / gridUm[lo]);
   return Math.exp(Math.log(v0) + t * (Math.log(v1) - Math.log(v0)));
+}
+
+// Chi-squared of photometric points against a model on gridUm.
+// points = [{ lamUm, fLam, errFlam|null }] (F_lambda cgs). A missing error is
+// taken as 10% of the data value and counted in assumedErrCount. Points
+// outside the grid are ignored. dof = N - nFree; reduced is null if dof <= 0.
+export function chi2(points, gridUm, total, nFree) {
+  let sum = 0;
+  let n = 0;
+  let assumedErrCount = 0;
+  for (const p of points) {
+    const model = interpLogLog(gridUm, total, p.lamUm);
+    if (!Number.isFinite(model)) continue;
+    let sigma = p.errFlam;
+    if (sigma === null || sigma === undefined || !(sigma > 0)) {
+      sigma = 0.1 * p.fLam;
+      assumedErrCount++;
+    }
+    const r = (p.fLam - model) / sigma;
+    sum += r * r;
+    n++;
+  }
+  const dof = n - nFree;
+  return { chi2: sum, dof, reduced: dof > 0 ? sum / dof : null, assumedErrCount };
 }

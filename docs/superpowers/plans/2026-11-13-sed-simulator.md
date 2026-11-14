@@ -203,7 +203,7 @@ test('two extended belts compute in under 20 ms', () => { /* time 10 runs of tot
 
 **Parsing rules:** header row required and must contain `wavelength_um` and `flux` (case-insensitive, trimmed); `flux_err` optional; accept CRLF/LF; skip blank lines; per-row errors for: non-numeric value, flux ≤ 0, error < 0, wavelength outside 0.05–3000 µm ("outside the model's 0.05–3000 µm range"). A file with zero valid rows returns `points: []` and at least one error.
 
-- [ ] **Step 1: Write failing tests**:
+- [x] **Step 1: Write failing tests**:
 
 ```js
 // physics.chi2.test.js
@@ -229,10 +229,10 @@ test('Jy input converts to F_lambda cgs', () => { /* 1 Jy at 100 um → 1e-23 * 
 test('modelToCsv has header and 500 rows', () => {});
 ```
 
-- [ ] **Step 2: Run** `npm test` → FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** `npm test` → PASS.
-- [ ] **Step 5: Commit** `feat: chi-squared and photometry CSV import/export`.
+- [x] **Step 2: Run** `npm test` → FAIL.
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run** `npm test` → PASS.
+- [x] **Step 5: Commit** `feat: chi-squared and photometry CSV import/export`.
 
 ---
 
