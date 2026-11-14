@@ -1,11 +1,12 @@
 // DOM wiring: sliders, panels, plot updates and URL hash. All physics lives in
 // the pure modules; this file only connects them to the page.
 import {
-  totalModel, chi2, luminosity, wienPeakUm, beltTempRange, excessRatio,
+  totalModel, chi2, luminosity, wienPeakUm, beltTempRange, excessRatio, extinctionRatio,
 } from './physics.js';
+import { bandById } from './bands.js';
 import {
-  RANGES, defaultState, decodeHash, encodeHash, normalizeState, setBeltDistance,
-  toPhysicsParams, toSimple, hasAdvancedPhysics, countFreeParams,
+  RANGES, defaultState, decodeHash, encodeHash, normalizeState, setBeltDistance, setBeltRadii, setLinked,
+  toPhysicsParams, toSimple, hasAdvancedPhysics, countFreeParams, beltFrac, isFracCapped,
 } from './model.js';
 import { buildFigure, resolveColors } from './figure.js';
 import { parseCsv, modelToCsv } from './dataio.js';
@@ -35,18 +36,19 @@ const setBelt = (belt, key) => (s, v) => normalizeState({ ...s, [belt]: { ...s[b
 const SIMPLE_CONTROLS = [
   { id: 'T', label: 'Star temperature', symbol: 'T★ (K)', range: 'T', get: (s) => s.star.T, set: setStar('T') },
   { id: 'R', label: 'Star size', symbol: 'R★ (R☉)', range: 'R', get: (s) => s.star.R, set: setStar('R') },
-  { id: 'd', label: 'Distance to the star', symbol: 'd (pc)', range: 'd', get: (s) => s.star.d, set: setStar('d') },
-  { id: 'r', label: 'How far the dust is from the star', symbol: 'r (AU)', range: 'r', get: (s) => s.belt1.rIn, set: (s, v) => setBeltDistance(s, v) },
-  { id: 'f', label: 'How bright the dust is', symbol: 'L_dust/L★', range: 'f', get: (s) => s.belt1.f, set: setBelt('belt1', 'f') },
+  { id: 'd', label: 'Distance to the star', symbol: 'd (pc)', range: 'd', get: (s) => s.star.d, set: setStar('d'), resync: true },
+  { id: 'Av', label: 'Dimming by interstellar dust', symbol: 'A_V (mag)', range: 'Av', get: (s) => s.ism.Av, set: (s, v) => normalizeState({ ...s, ism: { ...s.ism, Av: v } }) },
+  { id: 'r', label: 'How far the dust is from the star', symbol: 'r (AU)', range: 'r', get: (s) => s.belt1.rIn, set: (s, v) => setBeltDistance(s, v), resync: true },
+  { id: 'M', label: 'How much dust', symbol: 'M_dust (M⊕, ~10 µm grains)', range: 'M', get: (s) => s.belt1.M, set: setBelt('belt1', 'M') },
 ];
 
 // Advanced-panel controls (belt 1 radii replace the single simple-mode distance).
 const beltControls = (n) => {
   const b = `belt${n}`;
   return [
-    { id: `b${n}f`, label: 'Brightness', symbol: 'L_dust/L★', range: 'f', get: (s) => s[b].f, set: setBelt(b, 'f') },
-    { id: `b${n}in`, label: 'Inner edge', symbol: 'r_in (AU)', range: 'r', get: (s) => s[b].rIn, set: setBelt(b, 'rIn'), resync: true },
-    { id: `b${n}out`, label: 'Outer edge', symbol: 'r_out (AU)', range: 'r', get: (s) => s[b].rOut, set: setBelt(b, 'rOut'), resync: true },
+    { id: `b${n}M`, label: 'How much dust', symbol: 'M_dust (M⊕, ~10 µm grains)', range: 'M', get: (s) => s[b].M, set: setBelt(b, 'M') },
+    { id: `b${n}in`, label: 'Inner edge', symbol: 'r_in (AU)', range: 'r', get: (s) => s[b].rIn, set: (s, v) => setBeltRadii(s, b, v, s[b].rOut), resync: true },
+    { id: `b${n}out`, label: 'Outer edge', symbol: 'r_out (AU)', range: 'r', get: (s) => s[b].rOut, set: (s, v) => setBeltRadii(s, b, s[b].rIn, v), resync: true },
     { id: `b${n}l0`, label: 'Emissivity turnover', symbol: 'λ₀ (µm)', range: 'lambda0', get: (s) => s[b].lambda0, set: setBelt(b, 'lambda0') },
     { id: `b${n}beta`, label: 'Emissivity slope', symbol: 'β', range: 'beta', get: (s) => s[b].beta, set: setBelt(b, 'beta') },
   ];
@@ -133,7 +135,6 @@ document.getElementById('advanced-host').innerHTML = `
       <legend>Display</legend>
       <label for="unit-select">Flux units</label>
       <select id="unit-select">${optionsHtml(UNIT_OPTIONS)}</select>
-      <label class="check"><input type="checkbox" id="bands-on"> Show telescope bands</label>
     </fieldset>
     <fieldset class="panel">
       <legend>Your data</legend>
@@ -156,7 +157,18 @@ const syncers = [
   ...BELT1_CONTROLS.slice(1).map(bindSlider),
   ...BELT2_CONTROLS.map(bindSlider),
 ];
-// The brightness slider for belt 1 is the same quantity as simple mode's f slider.
+const avLinkedEl = document.getElementById('av-linked');
+avLinkedEl.addEventListener('change', () => {
+  state = setLinked(state, avLinkedEl.checked);
+  markCustom();
+  scheduleRender(true);
+});
+
+const holdEl = document.getElementById('hold-brightness');
+holdEl.addEventListener('change', () => {
+  state = normalizeState({ ...state, holdBrightness: holdEl.checked });
+  scheduleRender(true);
+});
 
 const beltOnEl = document.getElementById('belt-on');
 beltOnEl.addEventListener('change', () => {
@@ -209,8 +221,9 @@ presetEl.addEventListener('change', () => {
   if (!p) { presetDescEl.textContent = ''; return; }
   const prev = state;
   state = applyPreset(p.id);
-  // Choosing a preset while in Advanced keeps Advanced mode, the flux unit and the bands.
-  if (prev.mode === 'advanced') state = { ...state, mode: 'advanced', unit: prev.unit, bands: prev.bands };
+  // A preset keeps the student's band overlay; in Advanced it also keeps Advanced mode and the flux unit.
+  state = { ...state, bands: prev.bands };
+  if (prev.mode === 'advanced') state = { ...state, mode: 'advanced', unit: prev.unit };
   presetDescEl.textContent = p.description;
   if (p.unverified.length) {
     const note = document.createElement('span');
@@ -414,8 +427,11 @@ function syncControls() {
   belt2OnEl.checked = state.belt2.on;
   unitEl.value = state.unit;
   bandsEl.checked = state.bands;
+  avLinkedEl.checked = state.ism.linked;
+  holdEl.checked = state.holdBrightness;
+  setDisabled(document.querySelector('[data-ctl="Av"]'), state.ism.linked);
 
-  for (const id of ['r', 'f', ...BELT1_CONTROLS.slice(1).map((c) => c.id)]) {
+  for (const id of ['r', 'M', ...BELT1_CONTROLS.slice(1).map((c) => c.id)]) {
     setDisabled(document.querySelector(`[data-ctl="${id}"]`), !state.belt1.on);
   }
   for (const c of BELT2_CONTROLS) {
@@ -429,7 +445,7 @@ function syncControls() {
     else if (!allowed && ['T', 'R', 'd'].includes(host.dataset.ctl)) setDisabled(host, false);
   }
   const locked = !!activeChallenge;
-  for (const el of [beltOnEl, belt2OnEl, presetEl, fileInput, document.getElementById('clear-data'),
+  for (const el of [beltOnEl, belt2OnEl, avLinkedEl, holdEl, presetEl, fileInput, document.getElementById('clear-data'),
     document.getElementById('mode-simple'), document.getElementById('mode-advanced')]) {
     el.disabled = locked;
   }
@@ -457,17 +473,25 @@ function renderReadouts(model) {
     if (!b.on) continue;
     const [lo, hi] = beltTempRange(L, b);
     rows.push([`${name} dust temperature`, b.rIn === b.rOut ? `${g3(hi)} K` : `${g3(lo)}–${g3(hi)} K`]);
-    rows.push([`${name} L_dust/L★`, g3(b.f)]);
+    rows.push([`${name} dust mass`, `${g3(b.M)} M⊕ (${g3(b.M / 0.0123)} lunar masses)`]);
+    rows.push([`${name} L_dust/L★`, isFracCapped(b) ? `${g3(beltFrac(b))} (capped)` : g3(beltFrac(b))]);
   }
   if (state.belt1.on || state.belt2.on) {
-    for (const lam of [24, 70]) {
-      rows.push([`Excess at ${lam} µm (total/star)`, g3(excessRatio(model.grid, model.total, model.star, lam))]);
+    for (const id of ['MIPS 24', 'MIPS 70']) {
+      rows.push([`${id} excess (total/star)`, g3(excessRatio(model.grid, model.total, model.star, bandById(id).lamUm))]);
     }
   }
+  const AV = state.ism.Av;
+  rows.push(['Dimming A_V', `${g3(AV)} mag (E(B−V) = ${g3(AV / 3.1)}, A_Ks = ${g3(AV * extinctionRatio(2.159))})`]);
   let html = '<dl class="readout-grid">' + rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('') + '</dl>';
   html += '<p class="hint">The peak you see on the plot depends on the flux unit: F_λ peaks at 2898/T µm, λF_λ near 3670/T, F_ν near 5100/T.</p>';
   if (state.belt1.on || state.belt2.on) {
     html += '<p class="hint">Dust distances assume blackbody grains at the fitted temperature. Real small grains run hotter, so belts seen in images usually sit 2 to 4 times farther out.</p>';
+  }
+  const hot = [['Belt 1', state.belt1], ['Belt 2', state.belt2]].filter(([, b]) => b.on && beltFrac(b) >= 0.01);
+  if (hot.length) {
+    const capped = [state.belt1, state.belt2].some((b) => b.on && isFracCapped(b));
+    html += `<p class="hint">${hot.map(([n]) => n).join(' and ')} is brighter than any known debris disk (f ≥ 0.01). This model assumes optically thin dust${capped ? ', and f is capped at 0.1' : ''}.</p>`;
   }
   if (fitStats) {
     const n = fitN;

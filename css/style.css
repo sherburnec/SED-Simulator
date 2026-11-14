@@ -12,7 +12,10 @@
   --total: #1d2330;
   --data: #c2185b;
   --reveal: #2e8b2e;
-  --band: rgba(36, 86, 200, 0.10);
+  --band-2mass: rgba(36, 86, 200, 0.14);
+  --band-allwise: rgba(200, 120, 20, 0.16);
+  --band-irac: rgba(30, 150, 80, 0.16);
+  --band-mips: rgba(180, 40, 140, 0.14);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,7 +33,10 @@
     --total: #e6e9ef;
     --data: #ff6fa5;
     --reveal: #6fd16f;
-    --band: rgba(127, 166, 255, 0.14);
+    --band-2mass: rgba(127, 166, 255, 0.20);
+    --band-allwise: rgba(255, 180, 90, 0.20);
+    --band-irac: rgba(110, 220, 150, 0.20);
+    --band-mips: rgba(240, 130, 210, 0.20);
   }
 }
 

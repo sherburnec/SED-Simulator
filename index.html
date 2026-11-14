@@ -29,11 +29,24 @@
         <div class="ctl" data-ctl="d"></div>
       </fieldset>
 
+      <fieldset class="panel" id="ism-panel">
+        <legend>Dust between us and the star</legend>
+        <div class="ctl" data-ctl="Av"></div>
+        <label class="check"><input type="checkbox" id="av-linked"> Set from distance (about 1 mag per kpc)</label>
+        <p class="hint">A rough Galactic-plane average; real sightlines vary a lot. Stars within about 100 pc (the Local Bubble) have almost none.</p>
+      </fieldset>
+
       <fieldset class="panel" id="dust-panel">
         <legend>Dust belt</legend>
         <label class="check"><input type="checkbox" id="belt-on"> Show dust belt</label>
         <div class="ctl" data-ctl="r"></div>
-        <div class="ctl" data-ctl="f"></div>
+        <div class="ctl" data-ctl="M"></div>
+        <label class="check"><input type="checkbox" id="hold-brightness"> Keep the dust's brightness fixed when I move it</label>
+      </fieldset>
+
+      <fieldset class="panel" id="display-panel">
+        <legend>Display</legend>
+        <label class="check"><input type="checkbox" id="bands-on"> Show telescope bands (2MASS, WISE, IRAC, MIPS)</label>
       </fieldset>
 
       <div id="advanced-host"></div>

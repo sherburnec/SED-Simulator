@@ -14,13 +14,20 @@ telescopes can detect which dust.
 
 ## Using it
 
-- **Simple mode** (default): five sliders for star temperature, star size,
-  distance, how far the dust is, and how bright it is.
+- **Simple mode** (default): six sliders: star temperature, star size,
+  distance, dimming by interstellar dust (A_V), how far the dust is, and how
+  much dust there is (its mass). A checkbox links A_V to the distance (about
+  1 mag per kpc); another keeps the dust's brightness fixed when you move the
+  belt, so the bump slides left and right without changing height.
+- **Bands**: the plot shades the 2MASS (J, H, Ks), AllWISE (W1 to W4), Spitzer
+  IRAC (3.6, 4.5, 5.8, 8.0 µm) and Spitzer MIPS (24, 70, 160 µm) bands, in both
+  modes.
 - **Advanced mode**: dust belt shape (inner and outer edge), grain emissivity
-  (λ₀ and β), a second belt, flux units, telescope band overlays, upload of
-  your own photometry, and CSV export of the model.
+  (λ₀ and β), a second belt, flux units, upload of your own photometry, and CSV
+  export of the model.
 - **Presets**: Sun, Vega, Fomalhaut, β Pictoris, ε Eridani, HR 8799.
-- **Challenges**: mystery SEDs to match by hand, with a live reduced χ² and a
+- **Challenges**: five mystery SEDs (bare star, reddened star, find the dust,
+  star and dust, two belts) to match by hand, with a live reduced χ² and a
   Reveal button.
 - **Live equations**: the equations behind the curve with your current numbers.
 - **Share links**: the address bar always holds the current settings, so you
@@ -78,9 +85,12 @@ Pages serve the files as they are.
 
 ## Model limits
 
-Stars are blackbodies (no atmosphere models, no extinction). Grains are
-blackbodies or modified blackbodies, with no grain-size distribution and no
-radiative transfer. A dust temperature fitted with blackbody grains puts the
+Stars are blackbodies (no atmosphere models). Interstellar extinction uses
+Cardelli, Clayton & Mathis (1989) and Indebetouw et al. (2005) with R_V = 3.1
+and no silicate feature. Grains are blackbodies or modified blackbodies of one
+size (10 µm, 2.5 g cm⁻³, which turns dust mass into brightness), optically
+thin, with no size distribution and no radiative transfer. Bands are sampled at
+their central wavelength, not integrated over filter curves. A dust temperature fitted with blackbody grains puts the
 belt closer to the star than it appears in images, because real small grains
 run hotter than blackbodies. The presets place belts to match the observed
 dust temperature, not the imaged radius. Some preset values are still
