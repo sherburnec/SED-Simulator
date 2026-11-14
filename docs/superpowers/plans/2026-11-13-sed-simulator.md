@@ -303,7 +303,7 @@ test('countFreeParams: simple 5; dust off 3; extended belt1 with beta 8; plus ex
     - when `state.bands`: one `layout.shapes` rect per band (±5% in λ, `yref:'paper'`, light fill) and one `layout.annotations` label each; none when off
     - colours read from CSS custom properties at render time in `ui.js`. `buildFigure` uses placeholder colour tokens such as `'var:star'`, and `ui.js` resolves them. The figure stays pure.
 
-- [ ] **Step 1: Write failing tests**:
+- [x] **Step 1: Write failing tests**:
 
 ```js
 test('trace order and count for one belt, no data', () => { /* names: Star, Belt 1, Total, Star peak */ });
@@ -316,8 +316,8 @@ test('belt 1 trace is absent when belt1.on is false', () => {});
 test('points trace carries error bars converted to the display unit', () => {});
 ```
 
-- [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat: telescope bands and Plotly figure builder`.
+- [x] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat: telescope bands and Plotly figure builder`.
 
 ---
 
