@@ -348,10 +348,10 @@ Redraw on `input` events via `requestAnimationFrame` coalescing (one render per 
 
 Theme tokens on `:root` (`--bg, --fg, --muted, --grid, --star, --belt1, --belt2, --total, --data, --band`), redefined under `@media (prefers-color-scheme: dark)`; `body` gets an explicit background. `ui.js` resolves `'var:<name>'` colour tokens from `getComputedStyle`.
 
-- [ ] **Step 1: Build** the page and wiring above.
-- [ ] **Step 2: Verify in a browser.** Run `npx --yes http-server -p 8080 -c-1` (or `python -m http.server 8080`) from the repo root and open `http://localhost:8080`. Expected: default Sun-like curve with a cold-dust bump near ~70–100 µm in λF_λ. Dragging T moves the peak smoothly with no visible lag. Reloading keeps the values (hash). Opening `#T=banana` shows defaults with no console errors. Width 375 px stacks controls with no horizontal scroll. Dark mode is readable.
-- [ ] **Step 3: Run** `npm test` → still all PASS.
-- [ ] **Step 4: Commit** `feat: page shell with simple-mode sliders and live plot`.
+- [x] **Step 1: Build** the page and wiring above.
+- [ ] **Step 2: Verify in a browser (NOT RUN: browser launch denied; needs the user).** Run `npx --yes http-server -p 8080 -c-1` (or `python -m http.server 8080`) from the repo root and open `http://localhost:8080`. Expected: default Sun-like curve with a cold-dust bump near ~70–100 µm in λF_λ. Dragging T moves the peak smoothly with no visible lag. Reloading keeps the values (hash). Opening `#T=banana` shows defaults with no console errors. Width 375 px stacks controls with no horizontal scroll. Dark mode is readable.
+- [x] **Step 3: Run** `npm test` → still all PASS.
+- [x] **Step 4: Commit** `feat: page shell with simple-mode sliders and live plot`.
 
 ---
 

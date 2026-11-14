@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SED Simulator</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>SED Simulator</h1>
+    <nav id="topnav" class="topnav" aria-label="Tools"></nav>
+  </header>
+
+  <main class="layout">
+    <section class="plot-col">
+      <div id="plot" class="plot" role="img" aria-label="Spectral energy distribution plot"></div>
+      <div id="readouts" class="panel readouts" aria-live="polite"></div>
+      <div id="equations-host"></div>
+    </section>
+
+    <aside class="controls" aria-label="Controls">
+      <fieldset class="panel">
+        <legend>Star</legend>
+        <div class="ctl" data-ctl="T"></div>
+        <div class="ctl" data-ctl="R"></div>
+        <div class="ctl" data-ctl="d"></div>
+      </fieldset>
+
+      <fieldset class="panel" id="dust-panel">
+        <legend>Dust belt</legend>
+        <label class="check"><input type="checkbox" id="belt-on"> Show dust belt</label>
+        <div class="ctl" data-ctl="r"></div>
+        <div class="ctl" data-ctl="f"></div>
+      </fieldset>
+
+      <div id="advanced-host"></div>
+    </aside>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+  <script type="module" src="js/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+:root {
+  --bg: #ffffff;
+  --panel: #f4f5f7;
+  --fg: #1d2330;
+  --muted: #5d6677;
+  --grid: #dfe3ea;
+  --border: #cfd5df;
+  --accent: #2456c8;
+  --star: #b4531c;
+  --belt1: #1b7f79;
+  --belt2: #7b4fb8;
+  --total: #1d2330;
+  --data: #c2185b;
+  --reveal: #2e8b2e;
+  --band: rgba(36, 86, 200, 0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171f;
+    --panel: #1d222d;
+    --fg: #e6e9ef;
+    --muted: #9aa4b5;
+    --grid: #2e3544;
+    --border: #3a4254;
+    --accent: #7fa6ff;
+    --star: #f0975a;
+    --belt1: #4fd1c5;
+    --belt2: #b794f4;
+    --total: #e6e9ef;
+    --data: #ff6fa5;
+    --reveal: #6fd16f;
+    --band: rgba(127, 166, 255, 0.14);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.topbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+}
+.topbar h1 { font-size: 1.2rem; margin: 0; }
+.topnav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.layout {
+  display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px;
+  padding: 16px; max-width: 1400px; margin: 0 auto;
+}
+
+.plot { width: 100%; height: 520px; }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; margin: 0 0 12px;
+}
+.panel legend { font-weight: 600; padding: 0 6px; }
+.readouts { margin-top: 8px; }
+
+.ctl { margin: 10px 0 14px; }
+.ctl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ctl label { font-weight: 500; }
+.ctl .sym { color: var(--muted); font-size: 0.85em; margin-left: 4px; }
+.ctl .line { display: flex; align-items: center; gap: 10px; }
+.ctl input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.ctl input[type="number"] {
+  width: 90px; padding: 3px 6px; background: var(--bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 4px;
+}
+.ctl.disabled { opacity: 0.45; }
+.check { display: block; margin: 4px 0 6px; }
+
+button, select {
+  background: var(--panel); color: var(--fg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px; font: inherit; cursor: pointer;
+}
+button[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; padding: 12px 16px; }
+  .plot { height: 380px; }
+}
