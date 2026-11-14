@@ -141,7 +141,7 @@
   - `buildFigure` draws each band strip as `[lamUm − widthUm/2, lamUm + widthUm/2]` with `fillcolor: 'var:band-<group lowercased, e.g. 2mass|allwise|irac|mips>'`, and each label at `y = 1 − 0.06 · BAND_GROUPS.indexOf(group)` in that group's colour. When `state.ism.Av > 0` it adds a trace named `'Star (no extinction)'` from `model.starIntrinsic` (`line: { color:'var:muted', dash:'dashdot', width:1 }`).
   - `equations(state)` adds `{ id:'extinction', controls: linked ? ['Av','d'] : ['Av'] }`, showing `F_obs = F_int·10^{−0.4A_λ}` with the current A_V and A_Ks. For each belt that is on, it adds `{ id:'dustMass' | 'dustMass2', controls:[massCtl, ...radiusCtls] }`, showing `f = 3M/(16πρ a r_in r_out)` with a and ρ, the current M and the resulting f (noting the cap if it applies). The mass control ids are `'M'` (belt 1) and `'b2M'` (belt 2). The `beltNorm` equations use `beltFrac`, and their controls swap `'f'`/`'b2f'` for `'M'`/`'b2M'`.
 
-- [ ] **Step 1: Write the failing tests:**
+- [x] **Step 1: Write the failing tests:**
   - figure: `'14 band strips and labels when on, none when off'`.
   - figure: `'band strips use real widths'`: the W3 shape has x0 ≈ 8.807 and x1 ≈ 14.313.
   - figure: `'band colours and label rows by group'`: the IRAC shapes use `'var:band-irac'`, and the MIPS labels sit at y = 0.82.
@@ -149,10 +149,10 @@
   - figure: `'y range ignores heavy extinction at the blue edge'`: with Av = 10 the y-range top is still log10(max total) + 0.5.
   - equations: `'extinction equation lists d only when linked'`; `'mass equation shows f'` (the TeX contains the formatted `beltFrac`); `'no equation references f or b2f controls'`.
   - Re-enable the `test.todo`s left by Task 1.
-- [ ] **Step 2: Run** `npm test`. Expected: the new tests FAIL.
-- [ ] **Step 3: Implement** the Interfaces above.
-- [ ] **Step 4: Run** `npm test`. Expected: the figure and equations tests PASS.
-- [ ] **Step 5: Commit** `feat: grouped survey bands, unreddened star curve, extinction and mass equations`.
+- [x] **Step 2: Run** `npm test`. Expected: the new tests FAIL.
+- [x] **Step 3: Implement** the Interfaces above.
+- [x] **Step 4: Run** `npm test`. Expected: the figure and equations tests PASS.
+- [x] **Step 5: Commit** `feat: grouped survey bands, unreddened star curve, extinction and mass equations`.
 
 ### Task 5: Presets and challenges
 

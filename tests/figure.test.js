@@ -90,15 +90,47 @@ test('y range spans 6 decades below the total peak, plus half a decade above', (
   assert.ok(Math.abs(layout.yaxis.range[0] - (top - 6)) < 1e-9);
 });
 
-test.todo('Task 4: bands add 19 shapes and labels when on and none when off', () => {
+test('14 band strips and labels when on, none when off', () => {
   const on = setup((s) => { s.bands = true; });
   const figOn = buildFigure(on.model, on.state);
-  assert.equal(figOn.layout.shapes.length, 19);
-  assert.equal(figOn.layout.annotations.length, 19);
-  const off = setup();
+  assert.equal(figOn.layout.shapes.length, 14);
+  assert.equal(figOn.layout.annotations.length, 14);
+  const off = setup((s) => { s.bands = false; });
   const figOff = buildFigure(off.model, off.state);
   assert.equal((figOff.layout.shapes ?? []).length, 0);
   assert.equal((figOff.layout.annotations ?? []).length, 0);
+});
+
+test('band strips use real widths', () => {
+  const { state, model } = setup();
+  const { layout } = buildFigure(model, state);
+  const i = BANDS.findIndex((b) => b.id === 'WISE W3');
+  assert.ok(Math.abs(layout.shapes[i].x0 - 8.807) < 1e-9);
+  assert.ok(Math.abs(layout.shapes[i].x1 - 14.313) < 1e-9);
+});
+
+test('band colours and label rows by group', () => {
+  const { state, model } = setup();
+  const { layout } = buildFigure(model, state);
+  BANDS.forEach((b, i) => {
+    assert.equal(layout.shapes[i].fillcolor, `var:band-${b.group.toLowerCase()}`);
+    if (b.group === 'IRAC') assert.equal(layout.shapes[i].fillcolor, 'var:band-irac');
+    if (b.group === 'MIPS') assert.ok(Math.abs(layout.annotations[i].y - 0.82) < 1e-12);
+  });
+});
+
+test('no-extinction trace only when Av is noticeable', () => {
+  const lo = setup((s) => { s.ism = { Av: 0, linked: false }; });
+  assert.ok(!names(buildFigure(lo.model, lo.state)).includes('Star (no extinction)'));
+  const hi = setup((s) => { s.ism = { Av: 2, linked: false }; });
+  assert.ok(names(buildFigure(hi.model, hi.state)).includes('Star (no extinction)'));
+});
+
+test('y range ignores heavy extinction at the blue edge', () => {
+  const { state, model } = setup((s) => { s.ism = { Av: 10, linked: false }; });
+  const { layout } = buildFigure(model, state);
+  const top = Math.log10(Math.max(...convertArray(model.grid, model.total, state.unit)));
+  assert.ok(Math.abs(layout.yaxis.range[1] - (top + 0.5)) < 1e-9);
 });
 
 test('points trace carries error bars converted to the display unit', () => {
@@ -137,13 +169,11 @@ test('resolveColors replaces every var: token and leaves other strings alone', (
   assert.equal(fig.data[0].name, 'Star');
 });
 
-test.todo('Task 4: band shapes use data values and annotations use log10 (Plotly log-axis rules)', () => {
-  const { state, model } = setup((s) => { s.bands = true; });
+test('band annotations use log10 (Plotly log-axis rules)', () => {
+  const { state, model } = setup();
   const { layout } = buildFigure(model, state);
   const iJ = BANDS.findIndex((b) => b.id === '2MASS J');
-  assert.ok(Math.abs(layout.shapes[iJ].x0 - 1.25 * 0.95) < 1e-12);
-  assert.ok(Math.abs(layout.shapes[iJ].x1 - 1.25 * 1.05) < 1e-12);
-  assert.ok(Math.abs(layout.annotations[iJ].x - Math.log10(1.25)) < 1e-12);
+  assert.ok(Math.abs(layout.annotations[iJ].x - Math.log10(1.235)) < 1e-12);
 });
 
 test('y range expands to include data far above the model, with error bars', () => {

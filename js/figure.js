@@ -2,13 +2,16 @@
 // Pure: colours are theme tokens ('var:star' ...) that ui.js resolves with
 // resolveColors() from the page's CSS custom properties.
 import { convertArray, convertFlux, peakIndex } from './physics.js';
-import { BANDS } from './bands.js';
+import { BANDS, BAND_GROUPS } from './bands.js';
 
 const Y_TITLES = {
   lamFlam: 'λF_λ (erg s⁻¹ cm⁻²)',
   Fnu: 'F_ν (Jy)',
   Flam: 'F_λ (erg s⁻¹ cm⁻² µm⁻¹)',
 };
+
+// Below this A_V (mag) the unreddened curve would be indistinguishable from the star.
+const SHOW_INTRINSIC_AV = 0.05;
 
 const ASSUMED_ERR_FRAC = 0.1; // matches chi2(): missing errors are drawn as 10%
 
@@ -27,6 +30,14 @@ export function buildFigure(model, state, { points = null, revealModel = null } 
     name: 'Star', x: Array.from(grid), y: starY, mode: 'lines',
     line: { color: 'var:star', dash: 'dash', width: 2 },
   }];
+
+  // Faint unreddened star, shown once the extinction is big enough to see.
+  if (state.ism.Av >= SHOW_INTRINSIC_AV && model.starIntrinsic) {
+    data.push({
+      name: 'Star (no extinction)', x: Array.from(grid), y: conv(model.starIntrinsic), mode: 'lines',
+      line: { color: 'var:muted', dash: 'dashdot', width: 1 },
+    });
+  }
 
   // model.belts holds only the belts that are on, belt 1 first.
   const labels = [];
@@ -109,16 +120,19 @@ export function buildFigure(model, state, { points = null, revealModel = null } 
 
   if (state.bands) {
     // Plotly log axes: shape x0/x1 are data values, annotation x is log10(value).
+    // One colour per survey and one label row per survey so neighbours do not overlap.
     for (const b of BANDS) {
+      const gi = BAND_GROUPS.indexOf(b.group);
+      const token = `var:band-${b.group.toLowerCase()}`;
       layout.shapes.push({
         type: 'rect', xref: 'x', yref: 'paper',
-        x0: b.lamUm * 0.95, x1: b.lamUm * 1.05, y0: 0, y1: 1,
-        fillcolor: 'var:band', line: { width: 0 }, layer: 'below',
+        x0: b.lamUm - b.widthUm / 2, x1: b.lamUm + b.widthUm / 2, y0: 0, y1: 1,
+        fillcolor: token, line: { width: 0 }, layer: 'below',
       });
       layout.annotations.push({
-        x: Math.log10(b.lamUm), xref: 'x', y: 1, yref: 'paper', text: b.label,
-        textangle: -90, showarrow: false, yanchor: 'top', xanchor: 'center',
-        font: { size: 9, color: 'var:muted' },
+        x: Math.log10(b.lamUm), xref: 'x', y: 1 - 0.06 * gi, yref: 'paper', text: b.label,
+        showarrow: false, yanchor: 'top', xanchor: 'center',
+        font: { size: 9, color: token },
       });
     }
   }

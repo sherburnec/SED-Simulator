@@ -1,6 +1,7 @@
 // TeX for the live equations panel, with the current numbers substituted.
 // Pure: returns strings; ui.js renders them with KaTeX.
-import { CONST, luminosity, dustTemp, beltTempRange } from './physics.js';
+import { CONST, GRAIN, luminosity, dustTemp, beltTempRange, extinctionRatio } from './physics.js';
+import { beltFrac, isFracCapped } from './model.js';
 
 // 3 significant figures; scientific notation for very small or large numbers.
 function sig3(v) {
@@ -37,11 +38,19 @@ export function equations(state) {
     controls: ['T', 'R', 'd'],
   });
 
+  const Av = state.ism.Av;
+  const linkTex = state.ism.linked ? String.raw`= 1\,\mathrm{mag/kpc}\times ${sig3(d / 1000)}\,\mathrm{kpc}` : '';
+  out.push({
+    id: 'extinction',
+    tex: String.raw`F_{\rm obs}(\lambda) = F_{\rm int}(\lambda)\,10^{-0.4A_\lambda},\quad A_V = ${sig3(Av)}\,\mathrm{mag}\ ${linkTex},\ A_{K_s} = ${sig3(Av * extinctionRatio(2.159))}\,\mathrm{mag}`,
+    controls: state.ism.linked ? ['Av', 'd'] : ['Av'],
+  });
+
   const belts = [
-    { n: 1, belt: state.belt1, id: 'dustTemp', ctl: advanced ? ['b1in', 'b1out'] : ['r'], f: 'f' },
-    { n: 2, belt: state.belt2, id: 'dustTemp2', ctl: ['b2in', 'b2out'], f: 'b2f' },
+    { n: 1, belt: state.belt1, id: 'dustTemp', ctl: advanced ? ['b1in', 'b1out'] : ['r'], m: 'M' },
+    { n: 2, belt: state.belt2, id: 'dustTemp2', ctl: ['b2in', 'b2out'], m: 'b2M' },
   ];
-  for (const { n, belt, id, ctl, f } of belts) {
+  for (const { n, belt, id, ctl, m } of belts) {
     if (!belt.on) continue;
     const sub = n === 2 ? '_2' : '';
     const ring = belt.rIn === belt.rOut;
@@ -54,11 +63,18 @@ export function equations(state) {
     }
     out.push({ id, tex, controls: ['T', 'R', ...ctl] });
 
-    const total = (belt.f * L * CONST.Lsun) / (4 * Math.PI * (d * CONST.pc) ** 2);
+    const fBelt = beltFrac(belt);
+    out.push({
+      id: n === 1 ? 'dustMass' : 'dustMass2',
+      tex: String.raw`f${sub} = \frac{3M${sub}}{16\pi\,\rho\, a\, r_{\rm in} r_{\rm out}},\ a = ${GRAIN.aUm}\,\mu\mathrm{m},\ \rho = ${GRAIN.rho}\,\mathrm{g\,cm^{-3}},\ M${sub} = ${sig3(belt.M)}\,M_\oplus \Rightarrow f${sub} = ${sig3(fBelt)}${isFracCapped(belt) ? String.raw`\ (\text{capped})` : ''}`,
+      controls: [m, ...ctl],
+    });
+
+    const total = (fBelt * L * CONST.Lsun) / (4 * Math.PI * (d * CONST.pc) ** 2);
     out.push({
       id: n === 1 ? 'beltNorm' : 'beltNorm2',
-      tex: String.raw`\int F_{\lambda,\rm dust${sub}}\,d\lambda = \frac{f${sub}\,L_\star}{4\pi d^2} = \frac{${sig3(belt.f)}\cdot ${sig3(L)}\,L_\odot}{4\pi\,(${sig3(d)}\,\mathrm{pc})^2} = ${sig3(total)}\,\mathrm{erg\,s^{-1}\,cm^{-2}}`,
-      controls: ['T', 'R', 'd', f],
+      tex: String.raw`\int F_{\lambda,\rm dust${sub}}\,d\lambda = \frac{f${sub}\,L_\star}{4\pi d^2} = \frac{${sig3(fBelt)}\cdot ${sig3(L)}\,L_\odot}{4\pi\,(${sig3(d)}\,\mathrm{pc})^2} = ${sig3(total)}\,\mathrm{erg\,s^{-1}\,cm^{-2}}`,
+      controls: ['T', 'R', 'd', m, ...ctl],
     });
   }
 

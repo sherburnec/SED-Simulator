@@ -5,19 +5,19 @@ import { defaultState } from '../js/model.js';
 
 const find = (list, id) => list.find((e) => e.id === id);
 
-test.todo('Task 4: dust temperature equation substitutes current values', () => {
+test('dust temperature equation substitutes current values', () => {
   const tex = find(equations(defaultState()), 'dustTemp').tex;
   assert.match(tex, /= 44\.0\\,\\mathrm\{K\}$/); // Sun, 40 AU: 278.3 * 40^-1/2 = 44.0 K
   assert.ok(tex.includes('(40.0)^{-1/2}'));
 });
 
-test.todo('Task 4: luminosity and Wien equations give the Sun values', () => {
+test('luminosity and Wien equations give the Sun values', () => {
   const eqs = equations(defaultState());
   assert.match(find(eqs, 'luminosity').tex, /= 1\.00\\,L_\\odot$/);
   assert.ok(find(eqs, 'wien').tex.includes('0.502'));
 });
 
-test.todo('Task 4: emissivity equation only in advanced', () => {
+test('emissivity equation only in advanced', () => {
   const s = defaultState();
   assert.equal(find(equations(s), 'emissivity'), undefined);
   s.mode = 'advanced';
@@ -27,7 +27,7 @@ test.todo('Task 4: emissivity equation only in advanced', () => {
   assert.ok(e.tex.includes('1.50'));
 });
 
-test.todo('Task 4: dust equations follow the belts that are on', () => {
+test('dust equations follow the belts that are on', () => {
   const s = defaultState();
   s.belt1.on = false;
   assert.equal(find(equations(s), 'dustTemp'), undefined);
@@ -37,7 +37,7 @@ test.todo('Task 4: dust equations follow the belts that are on', () => {
   assert.ok(find(equations(s), 'dustTemp2'));
 });
 
-test.todo('Task 4: extended belt shows the temperature range', () => {
+test('extended belt shows the temperature range', () => {
   const s = defaultState();
   s.mode = 'advanced';
   s.belt1.rIn = 4;
@@ -46,7 +46,7 @@ test.todo('Task 4: extended belt shows the temperature range', () => {
   assert.ok(tex.includes('139') && tex.includes('69.6'));
 });
 
-test.todo('Task 4: each equation lists the sliders that change it, using visible slider ids', () => {
+test('each equation lists the sliders that change it, using visible slider ids', () => {
   const simple = equations(defaultState());
   for (const e of simple) assert.ok(e.controls.length > 0, e.id);
   assert.ok(find(simple, 'dustTemp').controls.includes('r'));
@@ -57,11 +57,34 @@ test.todo('Task 4: each equation lists the sliders that change it, using visible
   assert.ok(!find(adv, 'dustTemp').controls.includes('r'));
 });
 
-test.todo('Task 4: small and large numbers use scientific notation in TeX', () => {
+test('small and large numbers use scientific notation in TeX', () => {
   const tex = find(equations(defaultState()), 'beltNorm').tex;
   assert.match(tex, /\\times ?10\^\{-?\d+\}/);
 });
 
-test.todo('Task 4: dust temperature formula shows the same 278.3 K coefficient it computes with', () => {
+test('dust temperature formula shows the same 278.3 K coefficient it computes with', () => {
   assert.ok(find(equations(defaultState()), 'dustTemp').tex.includes('278.3'));
+});
+
+test('extinction equation lists d only when linked', () => {
+  const s = defaultState();
+  assert.deepEqual(find(equations(s), 'extinction').controls, ['Av', 'd']);
+  s.ism = { Av: 2, linked: false };
+  assert.deepEqual(find(equations(s), 'extinction').controls, ['Av']);
+});
+
+test('mass equation shows f', () => {
+  const s = defaultState();
+  const tex = find(equations(s), 'dustMass').tex;
+  assert.ok(tex.includes('9.95\times10^{-5}') || tex.includes('9.9'), tex);
+  assert.deepEqual(find(equations(s), 'dustMass').controls, ['M', 'r']);
+});
+
+test('no equation references f or b2f controls', () => {
+  const s = defaultState();
+  s.mode = 'advanced';
+  s.belt2.on = true;
+  for (const e of equations(s)) {
+    assert.ok(!e.controls.includes('f') && !e.controls.includes('b2f'), e.id);
+  }
 });
