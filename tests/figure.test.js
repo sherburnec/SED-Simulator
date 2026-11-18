@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BANDS, BAND_GROUPS, bandById } from '../js/bands.js';
+import { BANDS, BAND_GROUPS, bandById, surveyForLam } from '../js/bands.js';
 import { buildFigure, resolveColors } from '../js/figure.js';
 import { defaultState, toPhysicsParams } from '../js/model.js';
 import { totalModel, convertArray, convertFlux, peakIndex } from '../js/physics.js';
@@ -211,4 +211,14 @@ test('band labels use opaque text tokens, not the translucent strip colours', ()
   BANDS.forEach((b, i) => {
     assert.equal(layout.annotations[i].font.color, `var:bandtext-${b.group.toLowerCase()}`);
   });
+});
+
+test('surveyForLam groups wavelengths by survey, nearest centre wins, else Other', () => {
+  assert.equal(surveyForLam(1.235), '2MASS');
+  assert.equal(surveyForLam(3.55), 'IRAC');
+  assert.equal(surveyForLam(3.35), 'AllWISE');
+  assert.equal(surveyForLam(23.7), 'MIPS');
+  assert.equal(surveyForLam(3.46), 'IRAC');
+  assert.equal(surveyForLam(0.4), 'Other');
+  assert.equal(surveyForLam(1000), 'Other');
 });

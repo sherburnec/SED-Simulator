@@ -301,12 +301,13 @@ function interpLogLogRaw(gridUm, values, lamUm) {
 // Chi-squared of photometric points against a model on gridUm.
 // points = [{ lamUm, fLam, errFlam|null }] (F_lambda cgs). A missing error is
 // taken as 10% of the data value and counted in assumedErrCount. Points
-// outside the grid are ignored. dof = N - nFree; reduced is null if dof <= 0.
+// outside the grid, and points with fit === false (Do Not Fit), are ignored. dof = N - nFree; reduced is null if dof <= 0.
 export function chi2(points, gridUm, total, nFree) {
   let sum = 0;
   let n = 0;
   let assumedErrCount = 0;
   for (const p of points) {
+    if (p.fit === false) continue;
     const model = interpLogLog(gridUm, total, p.lamUm);
     if (!Number.isFinite(model)) continue;
     let sigma = p.errFlam;

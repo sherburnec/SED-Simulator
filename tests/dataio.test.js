@@ -107,3 +107,11 @@ test('header error lists the columns that were found', () => {
   const r = parseCsv('lambda,jy\n24,1', 'Fnu');
   assert.match(r.errors[0].message, /lambda/);
 });
+
+test('optional fit column: 0/false/no mark Do Not Fit, blank or missing column fit', () => {
+  const r = parseCsv('wavelength_um,flux,fit\n1,1,1\n2,1,0\n3,1,\n4,1,No\n5,1,false', 'Fnu');
+  assert.deepEqual(r.points.map((p) => p.fit), [true, false, true, false, false]);
+  const none = parseCsv('wavelength_um,flux\n1,1', 'Fnu');
+  assert.equal(none.points[0].fit, true);
+  assert.equal(parseCsv('Wavelength_um,Flux,FIT\n1,1,0', 'Fnu').points[0].fit, false);
+});

@@ -66,3 +66,13 @@ test('interpLogLog is exact for a power law between grid points', () => {
   assert.ok(Math.abs(interpLogLog(g, v, 3) / 9 - 1) < 1e-12);
   assert.ok(Math.abs(interpLogLog(g, v, 40) / 1600 - 1) < 1e-12);
 });
+
+test('points marked fit:false are left out of chi2 and dof', () => {
+  const a = pointAt(10, 0.1);
+  const b = { ...pointAt(30, 0.1), fLam: pointAt(30, 0.1).fLam * 2, fit: false };
+  const both = chi2([a, b], MODEL.grid, MODEL.total, 0);
+  const one = chi2([a], MODEL.grid, MODEL.total, 0);
+  assert.equal(both.dof, one.dof);
+  assert.equal(both.chi2, one.chi2);
+  assert.equal(chi2([b], MODEL.grid, MODEL.total, 0).dof, 0);
+});

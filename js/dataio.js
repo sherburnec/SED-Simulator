@@ -15,7 +15,8 @@ const UNIT_LABELS = {
 // ignored). Accepts comma, semicolon or tab delimiters, quoted cells, CRLF / LF
 // / CR line endings, leading '#' comment lines, and decimal commas when the
 // delimiter is not a comma. `unit` is the unit of the flux columns. Returns
-// points as { lamUm, fLam, errFlam|null } in F_lambda cgs (a missing or zero
+// points as { lamUm, fLam, errFlam|null, fit } in F_lambda cgs (an optional `fit`
+// column marks Do Not Fit points with 0, false, no or n; anything else fits) (a missing or zero
 // error is null), plus per-row errors { row (1-based file line), message }.
 export function parseCsv(text, unit) {
   const lines = String(text).split(/\r\n|\r|\n/);
@@ -34,6 +35,7 @@ export function parseCsv(text, unit) {
   const iLam = header.indexOf('wavelength_um');
   const iFlux = header.indexOf('flux');
   const iErr = header.indexOf('flux_err');
+  const iFit = header.indexOf('fit');
   if (iLam < 0 || iFlux < 0) {
     return {
       points,
@@ -69,7 +71,8 @@ export function parseCsv(text, unit) {
       if (err < 0) { errors.push({ row, message: 'flux_err must not be negative.' }); continue; }
       if (err > 0) errFlam = toFlamCgs(lamUm, err, unit);
     }
-    points.push({ lamUm, fLam: toFlamCgs(lamUm, flux, unit), errFlam });
+    const fit = iFit < 0 || !['0', 'false', 'no', 'n'].includes((cells[iFit] ?? '').trim().toLowerCase());
+    points.push({ lamUm, fLam: toFlamCgs(lamUm, flux, unit), errFlam, fit });
   }
 
   if (points.length === 0 && errors.length === 0) {

@@ -30,3 +30,15 @@ export function bandById(id) {
   if (!b) throw new Error(`unknown band: ${id}`);
   return b;
 }
+
+// Survey a photometry point belongs to: the group of the band whose centre is
+// nearest, provided the point lies within that band (half its width, at least
+// 5% of its wavelength); otherwise 'Other'.
+export function surveyForLam(lamUm) {
+  let best = null;
+  for (const b of BANDS) {
+    const d = Math.abs(lamUm - b.lamUm);
+    if (d <= Math.max(b.widthUm / 2, 0.05 * b.lamUm) && (!best || d < best.d)) best = { d, group: b.group };
+  }
+  return best ? best.group : 'Other';
+}
