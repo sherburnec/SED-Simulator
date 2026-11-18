@@ -37,6 +37,12 @@ telescopes can detect which dust.
 Photometry upload takes a CSV (comma, semicolon or tab separated) with the
 columns `wavelength_um`, `flux` and optionally `flux_err`.
 
+### Plot views
+
+The default **Class** view imitates the SED figures used in class: boxed axes, the object name as the title, one grey model curve, F_ν (Jy) on the y axis, survey-coloured data points and a legend with T★, T_eff and the reduced χ². **Modern** is the earlier look (coloured star, dust and total curves, λF_λ, optional band shading). Switch with the buttons in the Display panel.
+
+Points you do not want in the fit are **Do Not Fit**: untick them in the data table (Advanced mode) or put `0` in an optional `fit` column of your CSV. They are drawn black and left out of χ².
+
 ## Run it locally
 
 Any static file server works, for example from this folder:

@@ -3,10 +3,10 @@
 import {
   totalModel, chi2, luminosity, wienPeakUm, beltTempRange, excessRatio, extinctionRatio,
 } from './physics.js';
-import { bandById } from './bands.js';
+import { bandById, surveyForLam } from './bands.js';
 import {
   RANGES, defaultState, decodeHash, encodeHash, normalizeState, setBeltDistance, setBeltRadii, setLinked,
-  toPhysicsParams, toSimple, hasAdvancedPhysics, countFreeParams, beltFrac, isFracCapped,
+  toPhysicsParams, toSimple, defaultUnit, hasAdvancedPhysics, countFreeParams, beltFrac, isFracCapped,
 } from './model.js';
 import { buildFigure, resolveColors } from './figure.js';
 import { parseCsv, modelToCsv } from './dataio.js';
@@ -19,6 +19,7 @@ import {
 // Live state shared with the feature modules wired in below.
 let state = location.hash.length > 1 ? decodeHash(location.hash) : defaultState();
 let uploadedPoints = [];    // student photometry; kept when switching to simple mode, only hidden
+let uploadedName = '';      // file name (no extension) of the last upload, used as the plot title
 let uploadedText = '';      // raw text of the last upload, re-parsed if the file unit changes
 let activeChallenge = null; // challenge in progress (Task 10)
 let fitStats = null;        // chi2 of the shown data against the model, or null
@@ -138,12 +139,13 @@ document.getElementById('advanced-host').innerHTML = `
     </fieldset>
     <fieldset class="panel">
       <legend>Your data</legend>
-      <p class="hint">CSV with columns wavelength_um, flux and (optionally) flux_err. Stays in your browser.</p>
+      <p class="hint">CSV with columns wavelength_um, flux and (optionally) flux_err and fit (0 = Do Not Fit). Stays in your browser.</p>
       <label for="file-unit">Flux unit in the file</label>
       <select id="file-unit">${optionsHtml([['Fnu', 'F_ν (Jy)'], ['Flam', 'F_λ (erg s⁻¹ cm⁻² µm⁻¹)'], ['lamFlam', 'λF_λ (erg s⁻¹ cm⁻²)']])}</select>
       <input type="file" id="file-input" accept=".csv,.txt,text/csv,text/plain">
       <div id="upload-status" class="hint" role="status"></div>
       <ul id="upload-errors" class="errors"></ul>
+      <div id="point-table"></div>
       <button type="button" id="clear-data">Remove data</button>
     </fieldset>
     <fieldset class="panel">
@@ -196,6 +198,16 @@ bandsEl.addEventListener('change', () => {
   scheduleRender(true);
 });
 
+function setView(view) {
+  if (view === state.view) return;
+  // Only swap the unit if it is still the old view's default; an explicit choice stays.
+  const unit = state.unit === defaultUnit(state.view) ? defaultUnit(view) : state.unit;
+  state = normalizeState({ ...state, view, unit });
+  scheduleRender(true);
+}
+document.getElementById('view-class').addEventListener('click', () => setView('class'));
+document.getElementById('view-modern').addEventListener('click', () => setView('modern'));
+
 // ---- mode toggle -------------------------------------------------------------
 
 const topnav = document.getElementById('topnav');
@@ -222,7 +234,8 @@ presetEl.addEventListener('change', () => {
   const prev = state;
   state = applyPreset(p.id);
   // A preset keeps the student's band overlay; in Advanced it also keeps Advanced mode and the flux unit.
-  state = { ...state, bands: prev.bands };
+  // A preset keeps the student's plot view too (and that view's default unit).
+  state = { ...state, bands: prev.bands, view: prev.view, unit: defaultUnit(prev.view) };
   if (prev.mode === 'advanced') state = { ...state, mode: 'advanced', unit: prev.unit };
   presetDescEl.textContent = p.description;
   if (p.unverified.length) {
@@ -276,9 +289,25 @@ const fileUnitEl = document.getElementById('file-unit');
 const statusEl = document.getElementById('upload-status');
 const errorsEl = document.getElementById('upload-errors');
 
+// One row per uploaded point with a Fit checkbox; unticked = Do Not Fit.
+function renderPointTable() {
+  const host = document.getElementById('point-table');
+  if (!uploadedPoints.length) { host.innerHTML = ''; return; }
+  const rows = uploadedPoints.map((p, i) => `<tr><td>${g3(p.lamUm)} µm</td><td>${surveyForLam(p.lamUm)}</td>`
+    + `<td><input type="checkbox" data-pt="${i}" aria-label="Fit point at ${g3(p.lamUm)} µm"${p.fit === false ? '' : ' checked'}></td></tr>`);
+  host.innerHTML = `<table class="reveal"><thead><tr><th>λ</th><th>Survey</th><th>Fit</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+document.getElementById('point-table').addEventListener('change', (e) => {
+  const i = e.target.dataset ? e.target.dataset.pt : undefined;
+  if (i === undefined || !uploadedPoints[i]) return;
+  uploadedPoints[i].fit = e.target.checked;
+  scheduleRender();
+});
+
 function loadUpload() {
   const { points, errors } = uploadedText ? parseCsv(uploadedText, fileUnitEl.value) : { points: [], errors: [] };
   uploadedPoints = points;
+  renderPointTable();
   errorsEl.innerHTML = '';
   for (const e of errors) {
     const li = document.createElement('li');
@@ -295,12 +324,14 @@ fileInput.addEventListener('change', async () => {
   const file = fileInput.files && fileInput.files[0];
   if (!file) return;
   uploadedText = await file.text();
+  uploadedName = file.name.replace(/\.[^.]*$/, '');
   fileInput.value = ''; // so choosing the same (corrected) file again still fires change
   loadUpload();
 });
 fileUnitEl.addEventListener('change', () => { if (uploadedText) loadUpload(); });
 document.getElementById('clear-data').addEventListener('click', () => {
   uploadedText = '';
+  uploadedName = '';
   uploadedPoints = [];
   fileInput.value = '';
   loadUpload();
@@ -427,6 +458,8 @@ function syncControls() {
   belt2OnEl.checked = state.belt2.on;
   unitEl.value = state.unit;
   bandsEl.checked = state.bands;
+  document.getElementById('view-class').setAttribute('aria-pressed', String(state.view === 'class'));
+  document.getElementById('view-modern').setAttribute('aria-pressed', String(state.view === 'modern'));
   avLinkedEl.checked = state.ism.linked;
   holdEl.checked = state.holdBrightness;
   setDisabled(document.querySelector('[data-ctl="Av"]'), state.ism.linked);
@@ -501,6 +534,8 @@ function renderReadouts(model) {
       ? `<p>χ² = ${g3(fitStats.chi2)}: add more points than free parameters (${n} points, ${k} free) for a reduced χ².${assumed}</p>`
       : `<p>χ²<sub>red</sub> = ${g3(fitStats.reduced)} (${n} points, ${k} free parameters)${assumed}</p>`;
   }
+  const skipped = state.mode === 'advanced' && !activeChallenge ? uploadedPoints.filter((p) => p.fit === false).length : 0;
+  if (skipped) html += `<p class="hint">${skipped} point${skipped === 1 ? '' : 's'} marked Do Not Fit (not in χ²).</p>`;
   readoutsEl.innerHTML = html;
 }
 
@@ -590,10 +625,16 @@ function render() {
     nFree = activeChallenge.challenge.free.length;
     if (activeChallenge.revealed) revealModel = totalModel(toPhysicsParams(activeChallenge.hidden));
   }
-  fitN = shownPoints ? shownPoints.length : 0;
+  fitN = shownPoints ? shownPoints.filter((p) => p.fit !== false).length : 0;
   fitK = nFree;
   fitStats = shownPoints ? chi2(shownPoints, model.grid, model.total, nFree) : null;
-  const fig = buildFigure(model, state, { points: shownPoints, revealModel });
+  const preset = PRESETS.find((x) => x.id === presetEl.value);
+  const title = preset ? preset.name
+    : activeChallenge ? activeChallenge.challenge.title
+      : shownPoints && uploadedName ? uploadedName : 'SED model';
+  const fig = buildFigure(model, state, {
+    points: shownPoints, revealModel, title, fit: fitStats && { reduced: fitStats.reduced },
+  });
   renderChallengePanel();
   renderReadouts(model);
   renderEquations();
