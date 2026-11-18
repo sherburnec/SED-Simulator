@@ -1,7 +1,7 @@
 // Builds the Plotly figure ({ data, layout }) from a model and the app state.
 // Pure: colours are theme tokens ('var:star' ...) that ui.js resolves with
 // resolveColors() from the page's CSS custom properties.
-import { convertArray, convertFlux, peakIndex } from './physics.js';
+import { convertArray, convertFlux, peakIndex, interpLogLog } from './physics.js';
 import { BANDS, BAND_GROUPS, surveyForLam } from './bands.js';
 
 const Y_TITLES = {
@@ -156,7 +156,7 @@ function addBands(layout) {
 const CLASS_X_RANGE = [0.5, 100]; // um, as in the class figures
 
 // The class figure: boxed axes, one grey model curve, survey-coloured points,
-// Do Not Fit points in black, legend (T_star, T_eff, reduced chi2) in the axes.
+// Do Not Fit points in black, telescope bands as model points, legend (T_star, T_eff, reduced chi2) in the axes.
 function buildClassFigure(model, state, { points = null, revealModel = null, title = 'SED model', fit = null } = {}) {
   const { grid } = model;
   const unit = state.unit;
@@ -196,6 +196,20 @@ function buildClassFigure(model, state, { points = null, revealModel = null, tit
   const skipped = all.filter((p) => p.fit === false);
   if (skipped.length) data.push(pointTrace('Do Not Fit', skipped, 'var:fg'));
 
+  // Telescope bands in the class view: the model's value at each band centre,
+  // as hollow diamonds in the survey colour, riding on the curve.
+  if (state.bands) {
+    for (const group of BAND_GROUPS) {
+      const bands = BANDS.filter((b) => b.group === group);
+      data.push({
+        name: `${group} bands`, x: bands.map((b) => b.lamUm),
+        y: bands.map((b) => convertFlux(b.lamUm, interpLogLog(grid, model.total, b.lamUm), unit)),
+        text: bands.map((b) => b.id), hoverinfo: 'text', mode: 'markers',
+        marker: { symbol: 'diamond-open', size: 10, line: { width: 2 }, color: `var:bandtext-${group.toLowerCase()}` },
+      });
+    }
+  }
+
   if (revealModel) {
     data.push({
       name: 'True model', x: Array.from(revealModel.grid),
@@ -229,7 +243,6 @@ function buildClassFigure(model, state, { points = null, revealModel = null, tit
       x: 0.5, xref: 'paper', y: 1.02, yref: 'paper', yanchor: 'bottom', showarrow: false,
     }],
   };
-  if (state.bands) addBands(layout);
   return { data, layout };
 }
 

@@ -61,7 +61,7 @@ test('no data, and all data Do Not Fit, do not break the figure', () => {
   assert.deepEqual(fig.data.filter((t) => t.error_y).map((t) => t.name), ['Do Not Fit']);
 });
 
-test('boxed axes, no grid, bands only when asked, true model in reveal', () => {
+test('boxed axes, no grid, bands only when asked (as points, not strips), true model in reveal', () => {
   const { state, model } = setup();
   const fig = buildFigure(model, state, { revealModel: model });
   assert.equal(fig.layout.xaxis.showgrid, false);
@@ -69,7 +69,13 @@ test('boxed axes, no grid, bands only when asked, true model in reveal', () => {
   assert.equal(fig.layout.shapes.length, 0);
   assert.ok(find(fig, /True model/));
   const withBands = setup((s) => { s.bands = true; });
-  assert.ok(buildFigure(withBands.model, withBands.state).layout.shapes.length > 0);
+  const bfig = buildFigure(withBands.model, withBands.state);
+  assert.equal(bfig.layout.shapes.length, 0);
+  const irac = find(bfig, /^IRAC bands$/);
+  assert.equal(irac.x.length, 4);
+  assert.ok(irac.y.every((y) => y > 0));
+  assert.equal(irac.marker.color, 'var:bandtext-irac');
+  assert.equal(find(fig, /bands$/), undefined);
 });
 
 test('every theme token either view uses is defined for light and dark', () => {

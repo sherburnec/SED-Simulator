@@ -205,8 +205,6 @@ function setView(view) {
   state = normalizeState({ ...state, view, unit });
   scheduleRender(true);
 }
-document.getElementById('view-class').addEventListener('click', () => setView('class'));
-document.getElementById('view-modern').addEventListener('click', () => setView('modern'));
 
 // ---- mode toggle -------------------------------------------------------------
 
@@ -216,6 +214,15 @@ topnav.insertAdjacentHTML('beforeend', `
     <button type="button" id="mode-simple">Simple</button>
     <button type="button" id="mode-advanced">Advanced</button>
   </div>`);
+
+topnav.insertAdjacentHTML('afterbegin', `
+  <div class="seg" role="group" aria-label="Plot view">
+    <button type="button" id="view-class">Class</button>
+    <button type="button" id="view-modern">Modern</button>
+  </div>`);
+
+document.getElementById('view-class').addEventListener('click', () => setView('class'));
+document.getElementById('view-modern').addEventListener('click', () => setView('modern'));
 
 // ---- presets -------------------------------------------------------------------
 
