@@ -14,6 +14,12 @@ export const RANGES = {
 };
 
 const UNITS = ['lamFlam', 'Fnu', 'Flam'];
+const VIEWS = ['class', 'modern'];
+
+// Flux unit each view opens with: the class figure uses F_nu (Jy), Modern lambda F_lambda.
+export function defaultUnit(view) {
+  return view === 'modern' ? 'lamFlam' : 'Fnu';
+}
 
 export function defaultState() {
   return {
@@ -23,8 +29,9 @@ export function defaultState() {
     belt1: { on: true, rIn: 40, rOut: 40, M: 2.5e-4, lambda0: 100, beta: 0 },
     belt2: { on: false, rIn: 5, rOut: 10, M: 8e-7, lambda0: 100, beta: 0 },
     holdBrightness: false,
-    unit: 'lamFlam',
-    bands: true,
+    unit: defaultUnit('class'),
+    bands: false,
+    view: 'class',
   };
 }
 
@@ -59,6 +66,7 @@ export function normalizeState(state) {
   const ism = s.ism && typeof s.ism === 'object' ? s.ism : {};
   const d = num(star.d, 'd', def.star.d);
   const linked = typeof ism.linked === 'boolean' ? ism.linked : def.ism.linked;
+  const view = VIEWS.includes(s.view) ? s.view : def.view;
   return {
     mode: s.mode === 'advanced' ? 'advanced' : 'simple',
     star: {
@@ -70,8 +78,9 @@ export function normalizeState(state) {
     belt1: normBelt(s.belt1, def.belt1),
     belt2: normBelt(s.belt2, def.belt2),
     holdBrightness: typeof s.holdBrightness === 'boolean' ? s.holdBrightness : def.holdBrightness,
-    unit: UNITS.includes(s.unit) ? s.unit : def.unit,
+    unit: UNITS.includes(s.unit) ? s.unit : defaultUnit(view),
     bands: typeof s.bands === 'boolean' ? s.bands : def.bands,
+    view,
   };
 }
 
@@ -119,7 +128,7 @@ export function toSimple(state) {
     mode: 'simple',
     belt1: { ...state.belt1, rOut: state.belt1.rIn, lambda0: def.belt1.lambda0, beta: 0 },
     belt2: { ...def.belt2, on: false },
-    unit: def.unit,
+    unit: defaultUnit(state.view),
   });
 }
 
@@ -159,7 +168,7 @@ export function encodeHash(state) {
     ['b2on', s.belt2.on ? '1' : '0'],
     ['r2i', sig4(s.belt2.rIn)], ['r2o', sig4(s.belt2.rOut)], ['m2', sig4(s.belt2.M)],
     ['l2', sig4(s.belt2.lambda0)], ['b2', sig4(s.belt2.beta)],
-    ['u', s.unit], ['bd', s.bands ? '1' : '0'],
+    ['u', s.unit], ['bd', s.bands ? '1' : '0'], ['v', s.view],
   ];
   return parts.map(([k, v]) => `${k}=${v}`).join('&');
 }
@@ -212,8 +221,9 @@ export function decodeHash(hash) {
     holdBrightness: flag('hb'),
     unit: raw.u,
     bands: flag('bd'),
+    view: raw.v,
   });
-  const wantsAdvanced = raw.m === 'a' || hasAdvancedPhysics(state) || state.unit !== 'lamFlam';
+  const wantsAdvanced = raw.m === 'a' || hasAdvancedPhysics(state) || state.unit !== defaultUnit(state.view);
   state.mode = wantsAdvanced ? 'advanced' : 'simple';
   return state;
 }

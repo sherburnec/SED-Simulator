@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   RANGES, defaultState, setBeltDistance, normalizeState, hasAdvancedPhysics,
   toSimple, toPhysicsParams, countFreeParams, encodeHash, decodeHash,
-  beltFrac, isFracCapped, setBeltRadii, setLinked,
+  beltFrac, isFracCapped, setBeltRadii, setLinked, defaultUnit,
 } from '../js/model.js';
 
 const advanced = () => {
@@ -26,9 +26,10 @@ test('defaults match the spec', () => {
   assert.deepEqual(s.belt2, { on: false, rIn: 5, rOut: 10, M: 8e-7, lambda0: 100, beta: 0 });
   assert.deepEqual(s.ism, { Av: 0.01, linked: true });
   assert.equal(s.holdBrightness, false);
-  assert.equal(s.bands, true);
+  assert.equal(s.bands, false);
+  assert.equal(s.view, 'class');
   assert.ok(Math.abs(beltFrac(s.belt1) / 1e-4 - 1) < 0.01);
-  assert.equal(s.unit, 'lamFlam');
+  assert.equal(s.unit, 'Fnu');
   assert.equal(s.mode, 'simple');
   assert.deepEqual(RANGES.T, [2500, 40000, 'log']);
   assert.deepEqual(RANGES.d, [1, 3000, 'log']);
@@ -70,7 +71,7 @@ test('reversed radii are swapped', () => {
 
 test('hash with advanced settings opens in advanced mode', () => {
   assert.equal(decodeHash('b2on=1').mode, 'advanced');
-  assert.equal(decodeHash('u=Fnu').mode, 'advanced');
+  assert.equal(decodeHash('u=lamFlam').mode, 'advanced');
   assert.equal(decodeHash('bd=1').mode, 'simple');
   assert.equal(decodeHash('T=7000').mode, 'simple');
 });
@@ -91,7 +92,9 @@ test('toSimple resets advanced physics and display, hasAdvancedPhysics reports i
   assert.equal(s.belt1.beta, 0);
   assert.equal(s.belt1.lambda0, 100);
   assert.equal(s.belt2.on, false);
-  assert.equal(s.unit, 'lamFlam');
+  assert.equal(s.unit, 'Fnu');
+  assert.equal(s.view, 'class');
+  assert.equal(toSimple({ ...a, view: 'modern' }).unit, 'lamFlam');
   assert.equal(s.bands, a.bands);
   assert.equal(s.belt1.M, 3e-3);
   assert.deepEqual(s.ism, a.ism);
@@ -178,8 +181,8 @@ test('legacy f1 link migrates to mass', () => {
   assert.equal(decodeHash('m1=1e-3&f1=0.5').belt1.M, 1e-3);
 });
 
-test('bands default on and do not force advanced', () => {
-  assert.equal(decodeHash('').bands, true);
+test('bands default off and do not force advanced', () => {
+  assert.equal(decodeHash('').bands, false);
   assert.equal(decodeHash('bd=0').bands, false);
 });
 
@@ -212,4 +215,19 @@ test('a v1 link (f keys, no al/av) opens unreddened, not linked to distance', ()
   assert.equal(s.ism.Av, 0);
   assert.equal(decodeHash('d=400&m1=1e-3').ism.linked, true);
   assert.equal(decodeHash('d=400&f1=2e-5&al=1').ism.linked, true);
+});
+
+test('view: default, normalising, share link', () => {
+  assert.equal(defaultState().view, 'class');
+  assert.equal(defaultState().unit, 'Fnu');
+  assert.equal(defaultUnit('modern'), 'lamFlam');
+  assert.equal(normalizeState({ view: 'bogus' }).view, 'class');
+  const m = { ...defaultState(), view: 'modern', unit: 'lamFlam' };
+  const back = decodeHash(encodeHash(m));
+  assert.equal(back.view, 'modern');
+  assert.equal(back.unit, 'lamFlam');
+  assert.equal(back.mode, 'simple');
+  assert.equal(decodeHash(encodeHash(defaultState())).mode, 'simple');
+  const legacy = decodeHash('T=5772&u=lamFlam');
+  assert.equal(legacy.view, 'class');
 });

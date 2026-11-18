@@ -6,7 +6,8 @@ import { defaultState, toPhysicsParams } from '../js/model.js';
 import { totalModel, convertArray, convertFlux, peakIndex } from '../js/physics.js';
 
 function setup(mutate = () => {}) {
-  const state = defaultState();
+  // The Modern view is the pre-class-style figure these tests were written for.
+  const state = { ...defaultState(), view: 'modern', unit: 'lamFlam', bands: true };
   mutate(state);
   const model = totalModel(toPhysicsParams(state));
   return { state, model };
