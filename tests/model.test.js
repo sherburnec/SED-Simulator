@@ -231,3 +231,8 @@ test('view: default, normalising, share link', () => {
   const legacy = decodeHash('T=5772&u=lamFlam');
   assert.equal(legacy.view, 'class');
 });
+
+test('R range is 0.1 to 100 solar radii, log, so 1 R☉ sits a third along', () => {
+  assert.deepEqual(RANGES.R, [0.1, 100, 'log']);
+  assert.equal(normalizeState({ star: { R: 500 } }).star.R, 100);
+});

@@ -108,7 +108,7 @@ and Spitzer MIPS** bands, and for Herschel, JCMT and ALMA to be removed.
 | Control | Range | Scale | Default |
 |---|---|---|---|
 | Star temperature T★ | 2,500 – 40,000 K | log | 5,772 K |
-| Star radius R★ | 0.1 – 20 R☉ | log | 1 R☉ |
+| Star radius R★ | 0.1 – 100 R☉ | log | 1 R☉ |
 | Distance d | 1 – 3000 pc | log | 10 pc |
 | Interstellar dimming A_V | 0 – 10 mag | linear | linked: 0.01 mag |
 | ↳ Set from distance | checkbox | | on |

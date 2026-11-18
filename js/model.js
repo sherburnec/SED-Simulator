@@ -4,7 +4,7 @@ import { avForDistance, fracFromMass, massForFrac, F_MAX } from './physics.js';
 
 export const RANGES = {
   T: [2500, 40000, 'log'],
-  R: [0.1, 20, 'log'],
+  R: [0.1, 100, 'log'],
   d: [1, 3000, 'log'],
   r: [0.1, 1000, 'log'],
   Av: [0, 10, 'lin'],
